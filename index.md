@@ -1,9 +1,3 @@
----
-layout: page
-mathjax: true
-title: "POST TITLE"
-categories: CATEGORY-1 CATEGORY-2
----
 
 # Tuesday Oct 13 2020
 
