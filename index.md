@@ -2,18 +2,18 @@
 # Tuesday Oct 13 2020
 
 1. GWEMLISA
-   Added vel params on binary class.
-   Gotta start populating the draft.
+   * Added vel params on binary class.
+   * Gotta start populating the draft.
 2. LIGHETR
    - Should implement black body analysis.
    - Should do the analytical form for the los alamos people.
 3. LEO I
-   Need to adress reviewer comments.
-   Add plot of the NFW profile to proof it's not enough.
+   * Need to adress reviewer comments.
+   * Add plot of the NFW profile to proof it's not enough.
 4. SPIN PREC
-   Get account on stampede and start runs.
+   * Get account on stampede and start runs.
 5. BROWN DWARF
-   Ter cara de pau...
+    * Ter cara de pau...
 6. LIGO
     * SCI SUM
         Finish the last comments.
