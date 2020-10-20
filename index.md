@@ -5,6 +5,20 @@ title: "POST TITLE"
 categories: CATEGORY-1 CATEGORY-2
 ---
 
+# Tuesday Oct 20 2020
+
+1. LEO I
+   Need to adress reviewer comments.
+   Add plot of the NFW profile to prove it's not enough.
+2. LIGHETR
+   - Should implement black body analysis.
+   - Should do the analytical form for the los alamos people.
+3. GWEMLISA
+   Gotta start populating the draft.
+4. SPIN PREC
+   q8-chi01 is in Ecc1.
+   Should I start more?
+
 # Tuesday Oct 13 2020
 
 1. GWEMLISA
