@@ -57,6 +57,12 @@ body {
 .clickable-cmd:hover {
     color: #55ff55;
 }
+
+.choice-selected {
+    background-color: #33ff33;
+    color: black;
+    font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -80,6 +86,7 @@ let rmCounter = 0;
 const rmResponses = ["Adorable.", "Precious.", "How charming.", "Cute."];
 let bhAdventureActive = false;
 let bhCurrentNode = 'start';
+let bhChoiceIndex = 0;
 
 const bhAdventure = {
     'start': {
@@ -148,8 +155,21 @@ const bhAdventure = {
     }
 };
 
-function makeClickable(text, command) {
-    return `<span class="clickable-cmd" onclick="executeCommand('${command}')">${text}</span>`;
+function makeClickable(text, command, index) {
+    const id = (index !== undefined) ? `id="choice-${index}"` : '';
+    return `<span ${id} class="clickable-cmd" onclick="executeCommand('${command}')">${text}</span>`;
+}
+
+function updateChoiceHighlight() {
+    // Remove all previous highlights
+    document.querySelectorAll('.choice-selected').forEach(el => {
+        el.classList.remove('choice-selected');
+    });
+    // Highlight current choice
+    const currentChoice = document.getElementById(`choice-${bhChoiceIndex}`);
+    if(currentChoice) {
+        currentChoice.classList.add('choice-selected');
+    }
 }
 
 function executeCommand(cmd) {
@@ -211,19 +231,35 @@ function runBuiltinCommand(cmd) {
     if(bhAdventureActive) {
         if(cmdLower === 'quit' || cmdLower === 'exit') {
             bhAdventureActive = false;
-            return "Exiting black hole adventure. Back to normal terminal.";
+            bhChoiceIndex = 0;
+            terminal.innerHTML = '';
+            const output = document.createElement('div');
+            output.className = 'output';
+            output.innerHTML = "Exiting black hole adventure. Back to normal terminal.";
+            terminal.appendChild(output);
+            createPrompt();
+            return null;
         } else if(cmdLower === 'restart') {
             bhCurrentNode = 'start';
+            bhChoiceIndex = 0;
             const node = bhAdventure[bhCurrentNode];
             const choicesText = Object.keys(node.choices).length > 0
-                ? '\n\n> ' + Object.keys(node.choices).map(c => makeClickable(c, c)).join(' | ')
+                ? '\n\n> ' + Object.keys(node.choices).map((c, i) => makeClickable(c, c, i)).join(' | ')
                 : '';
-            return node.text + choicesText;
+            terminal.innerHTML = '';
+            const output = document.createElement('div');
+            output.className = 'output';
+            output.innerHTML = node.text + choicesText;
+            terminal.appendChild(output);
+            createPrompt();
+            setTimeout(updateChoiceHighlight, 0);
+            return null;
         } else if(bhAdventure[bhCurrentNode].choices[cmdLower]) {
             bhCurrentNode = bhAdventure[bhCurrentNode].choices[cmdLower];
+            bhChoiceIndex = 0;
             const node = bhAdventure[bhCurrentNode];
             const choicesText = Object.keys(node.choices).length > 0
-                ? '\n\n> ' + Object.keys(node.choices).map(c => makeClickable(c, c)).join(' | ')
+                ? '\n\n> ' + Object.keys(node.choices).map((c, i) => makeClickable(c, c, i)).join(' | ')
                 : '';
             // Clear the terminal for narrative flow
             terminal.innerHTML = '';
@@ -232,6 +268,7 @@ function runBuiltinCommand(cmd) {
             output.innerHTML = node.text + choicesText;
             terminal.appendChild(output);
             createPrompt();
+            setTimeout(updateChoiceHighlight, 0);
             return null; // Don't create another prompt
         } else {
             const validChoices = Object.keys(bhAdventure[bhCurrentNode].choices);
@@ -283,9 +320,10 @@ function runBuiltinCommand(cmd) {
     } else if(cmdLower === 'bh' || cmdLower === 'blackhole') {
         bhAdventureActive = true;
         bhCurrentNode = 'start';
+        bhChoiceIndex = 0;
         const node = bhAdventure[bhCurrentNode];
         const choicesText = Object.keys(node.choices).length > 0
-            ? '\n\n> ' + Object.keys(node.choices).map(c => makeClickable(c, c)).join(' | ')
+            ? '\n\n> ' + Object.keys(node.choices).map((c, i) => makeClickable(c, c, i)).join(' | ')
             : '';
         // Clear terminal and show adventure start
         terminal.innerHTML = '';
@@ -294,6 +332,7 @@ function runBuiltinCommand(cmd) {
         output.innerHTML = node.text + choicesText;
         terminal.appendChild(output);
         createPrompt();
+        setTimeout(updateChoiceHighlight, 0);
         return null; // Don't create another prompt
     } else if(cmdLower === 'cd' || cmdLower.startsWith('cd ')) {
         const args = cmd.trim().split(/\s+/);
@@ -315,10 +354,12 @@ function createPrompt(prefill='') {
     // Don't show prompt during black hole adventure
     if(bhAdventureActive) {
         line.innerHTML = '<span class="prompt"></span>';
+        // Reset choice index
+        bhChoiceIndex = 0;
     } else {
         line.innerHTML = '<span class="prompt">user@website:~$ </span>';
     }
-    
+
     const input = document.createElement('span');
     input.contentEditable = true;
     input.spellcheck = false;
@@ -337,7 +378,16 @@ function createPrompt(prefill='') {
     input.addEventListener('keydown', function(e) {
         if(e.key === 'Enter') {
             e.preventDefault();
-            const command = input.textContent.trim();
+            let command = input.textContent.trim();
+
+            // If in adventure mode and input is empty, use highlighted choice
+            if(bhAdventureActive && !command) {
+                const choices = Object.keys(bhAdventure[bhCurrentNode].choices);
+                if(choices.length > 0) {
+                    command = choices[bhChoiceIndex];
+                }
+            }
+
             if(command) commandHistory.push(command);
             historyIndex = commandHistory.length;
             input.contentEditable = false;
@@ -395,20 +445,36 @@ function createPrompt(prefill='') {
                     createPrompt(currentText);
                 }
             }
-        } else if(e.key === 'ArrowUp') {
+        } else if(e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
             e.preventDefault();
-            if(commandHistory.length > 0) {
-                historyIndex = Math.max(historyIndex-1, 0);
-                input.textContent = commandHistory[historyIndex];
-                placeCaretAtEnd(input);
-            }
-        } else if(e.key === 'ArrowDown') {
-            e.preventDefault();
-            if(commandHistory.length > 0) {
-                historyIndex = Math.min(historyIndex+1, commandHistory.length);
-                if(historyIndex === commandHistory.length) input.textContent = '';
-                else input.textContent = commandHistory[historyIndex];
-                placeCaretAtEnd(input);
+
+            // If in black hole adventure, use arrows to navigate choices
+            if(bhAdventureActive) {
+                const choices = Object.keys(bhAdventure[bhCurrentNode].choices);
+                if(choices.length > 0) {
+                    if(e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                        bhChoiceIndex = (bhChoiceIndex - 1 + choices.length) % choices.length;
+                    } else if(e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                        bhChoiceIndex = (bhChoiceIndex + 1) % choices.length;
+                    }
+                    updateChoiceHighlight();
+                }
+            } else {
+                // Normal command history navigation
+                if(e.key === 'ArrowUp') {
+                    if(commandHistory.length > 0) {
+                        historyIndex = Math.max(historyIndex-1, 0);
+                        input.textContent = commandHistory[historyIndex];
+                        placeCaretAtEnd(input);
+                    }
+                } else if(e.key === 'ArrowDown') {
+                    if(commandHistory.length > 0) {
+                        historyIndex = Math.min(historyIndex+1, commandHistory.length);
+                        if(historyIndex === commandHistory.length) input.textContent = '';
+                        else input.textContent = commandHistory[historyIndex];
+                        placeCaretAtEnd(input);
+                    }
+                }
             }
         }
     });
