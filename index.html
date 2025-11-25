@@ -275,6 +275,9 @@ function makeClickable(text, command, index) {
 }
 
 function updateChoiceHighlight() {
+    // Only highlight if adventure is active
+    if(!bhAdventureActive) return;
+
     // Remove all previous highlights
     document.querySelectorAll('.choice-selected').forEach(el => {
         el.classList.remove('choice-selected');
@@ -346,6 +349,7 @@ function runBuiltinCommand(cmd) {
         if(cmdLower === 'quit' || cmdLower === 'exit') {
             bhAdventureActive = false;
             bhChoiceIndex = 0;
+            bhCurrentNode = 'start';
             terminal.innerHTML = '';
             const output = document.createElement('div');
             output.className = 'output';
