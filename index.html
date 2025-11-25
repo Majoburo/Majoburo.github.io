@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>María José Bustamante Rosell</title>
+<link rel="icon" type="image/gif" href="favicon.gif">
+<style>
+body {
+    background: black;
+    color: #33ff33;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: max(16px, min(3vw, 20px));
+    margin: 0;
+    padding: 20px;
+    overflow-y: auto;
+    height: 100vh;
+    -webkit-text-size-adjust: none;
+}
+
+.cursor {
+    display: inline-block;
+    width: 10px;
+    background-color: #33ff33;
+    animation: blink 1s steps(1) infinite;
+    vertical-align: bottom;
+}
+
+@keyframes blink {
+    50% { background-color: black; }
+}
+
+.output {
+    margin-left: 1em;
+    white-space: pre-wrap;
+}
+
+.output a {
+    color: #33ff33;
+    text-decoration: underline;
+}
+
+.command-line {
+    white-space: pre;
+}
+
+.prompt {
+    display: inline;
+}
+
+.clickable-cmd {
+    color: #33ff33;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.clickable-cmd:hover {
+    color: #55ff55;
+}
+</style>
+</head>
+<body>
+
+<div id="terminal"></div>
+
+<script>
+const sections = {
+    'home': "Welcome to my homepage!<br>I'm an EMIT Postdoctoral Fellow at Fisk and Vanderbilt Universities.<br>My research focuses on gravitational waves, extreme mass ratio inspirals (EMRIs),<br>and multi-messenger astronomy.<br><br>Type 'ls' to see available sections or 'help' for commands.",
+    'publications': "Publications:<br>Full list available at my <a href='https://orcid.org/0000-0003-0416-9818' target='_blank'>ORCID profile</a><br><br>Selected publications:<br>- <a href='https://ui.adsabs.harvard.edu/abs/2023MNRAS.526.1471F' target='_blank'>Fouvry et al. - Constraining IMBHs from stellar disc of SgrA* (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2023MNRAS.525.4121J' target='_blank'>Johnson, Coughlin et al. - Multimessenger parameter inference of WD binaries (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2023ApJ...954..102B' target='_blank'>The LIGO HET Response (LIGHETR) Project (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2022PhRvD.105d4005B' target='_blank'>Gravitational Wave Timing Array (2022)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2021ApJ...921..107B' target='_blank'>Dark Matter and Central Black Hole Mass in Leo I (2021)</a><br>- LIGO/Virgo Collaboration: GWTC-1, GWTC-2, GW190425<br><br>Download my <a href='cv.pdf' target='_blank'>full CV (PDF)</a>",
+    'research': "Research:<br>- Extreme Mass Ratio Inspirals (EMRIs) & LISA data analysis<br>- Multi-messenger astronomy (GW + EM counterparts)<br>- Black hole dynamics and stellar kinematics<br>- Supernova observations with JWST<br><br>Current projects:<br>- PI: NASA LISA Preparatory Science - EM-driven GW searches for EMRIs<br>- PI: JWST Cycle 3 - Scarlet deblender for IFU data<br>- Co-I: JWST GO Program 3805<br><br>Collaborations:<br>- LISA Consortium (2021-present)<br>- Young Supernova Experiment (2021-2023)<br>- LIGO/Virgo (2018-2021)",
+    'teaching': "Teaching & Mentoring:<br><br>Current:<br>- Co-Director: IDEA Summer Scholars Program (Fisk-Vanderbilt, 2024-present)<br>  Bridge program for HBCU undergraduates in astrophysics & data science<br><br>University of Texas at Austin (2014-2021):<br>- TA: General Relativity<br>- AI: Physical Science 303 (Instructor of record)<br>- TA: Popular Astronomy<br>- TA: General Physics I<br><br>PUCP Peru (2011-2012):<br>- TA: Cosmology<br>- TA: Introduction to Research<br><br>Mentored 6+ undergraduate students and 1 graduate student",
+    'contact': "Contact:<br>Email: bustamante [dot] rosell [at] vanderbilt [dot] edu<br>ORCID: <a href='https://orcid.org/0000-0003-0416-9818' target='_blank'>0000-0003-0416-9818</a><br>GitHub: <a href='https://github.com/majoburo' target='_blank'>github.com/majoburo</a><br><br>Office: Fisk University, Nashville, TN",
+    'other': "Other Projects:<br>- <a href='https://github.com/majoburo/snakebar.jl' target='_blank'>snakebar.jl</a> - Julia implementation<br>- <a href='https://github.com/majoburo/snakebar.py' target='_blank'>snakebar.py</a> - Python implementation<br>- <a href='/cmd/' target='_blank'>HR Diagram visualization</a><br><br>Outreach:<br>- Founder & Director: Fisk-Vanderbilt IDEA Summer Scholars (2023-present)<br>- Astronomy on Tap talks (Austin, 2017-2020)<br>- Public lectures on black holes and gravitational waves"
+};
+
+const terminal = document.getElementById('terminal');
+let commandHistory = [];
+let historyIndex = -1;
+let rmCounter = 0;
+const rmResponses = ["Adorable.", "Precious.", "How charming.", "Cute."];
+let bhAdventureActive = false;
+let bhCurrentNode = 'start';
+
+const bhAdventure = {
+    'start': {
+        text: "=== DEATH BY BLACK HOLE: A Space Adventure ===\nBased on Kurzgesagt's poster\n\nYou find yourself near a space with extreme gravity. The sight of it is taking your air away, hypnotizing and deadly at the same time. This is it. This is how it ends for you.\n\nDo you want the short answer or the long answer of how dying works?",
+        choices: {
+            'short': 'short_answer',
+            'long': 'long_answer'
+        }
+    },
+    'short_answer': {
+        text: "You die.\n\n=== THE END ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+    'long_answer': {
+        text: "What do Black Holes do to you exactly?\n\nYou're falling faster and faster toward the singularity.\n\nIs this a supermassive or stellar black hole?",
+        choices: {
+            'supermassive': 'supermassive_bh',
+            'stellar': 'stellar_bh'
+        }
+    },
+    'supermassive_bh': {
+        text: "A supermassive black hole! Good news - you'll survive a bit longer.\n\nThe tidal forces are weaker here. You have time to think.\n\nWhat do you do?",
+        choices: {
+            'physics': 'use_physics',
+            'orbit': 'try_orbit',
+            'accept': 'accept_fate_super'
+        }
+    },
+    'stellar_bh': {
+        text: "A stellar black hole! Bad news - tidal forces are already tearing you apart.\n\nYou're being spaghettified. Your atoms are stretched into long strands.\n\nEverything goes dark.\n\n=== THE RELATIVE SPAGHETTIFICATION ===\n\nYou died.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+    'use_physics': {
+        text: "You attempt to use the Penrose process - extracting energy from the black hole's rotation!\n\nYou're in the ergosphere, frame-dragging is pulling you around.\n\nDo you try to slingshot out, or go deeper toward the singularity?",
+        choices: {
+            'slingshot': 'slingshot',
+            'singularity': 'go_deeper'
+        }
+    },
+    'try_orbit': {
+        text: "You attempt to achieve a stable orbit around the black hole.\n\nYou're circling the event horizon, caught between escape and doom.\n\nBut you're too close. Your orbit is decaying.\n\nDo you try to escape now, or wait and observe?",
+        choices: {
+            'escape': 'try_escape',
+            'observe': 'observe_hole'
+        }
+    },
+    'accept_fate_super': {
+        text: "You accept your fate and fall toward the event horizon.\n\nTime dilation kicks in. Outside, the universe ages billions of years in seconds.\nYou watch stars die and galaxies fade.\n\nThen you cross the horizon. There's no going back now.\n\n=== THE FAST-FORWARD ETERNITY ===\n\nYou died experiencing the end of time.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+    'slingshot': {
+        text: "You fire thrusters at maximum! The black hole's rotation flings you outward!\n\nBut the tidal forces are too strong. Your ship breaks apart.\n\nDebris scatters across the event horizon, trapped in eternal orbit.\n\n=== THE RETROGRADING ===\n\nYou died, but your atoms orbit forever.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+    'go_deeper': {
+        text: "You plunge deeper into the ergosphere, then past the event horizon.\n\nThe singularity awaits. Infinite density, infinite gravity.\n\nSpace and time swap places. All paths lead inward.\n\nYou reach the center - crushed to infinite density, emitting X-rays as you compress.\n\n=== THE X-RAY SINGULARITY ===\n\nYou died in the most extreme place in the universe.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+    'try_escape': {
+        text: "You fire your engines at full power, trying to break free!\n\nBut you're in the photon sphere. Even light can only orbit here.\n\nYour ship becomes trapped, spiraling endlessly around the black hole.\n\nTime passes. Eons. Your orbit decays atom by atom.\n\n=== THE SWIRLED FOSSIL ===\n\nYou died, fossilized in an eternal orbit.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+    'observe_hole': {
+        text: "You decide to observe the black hole as you fall.\n\nThe accretion disk glows brilliantly. Superheated matter spirals inward at relativistic speeds.\n\nSuddenly, a jet of gamma radiation erupts from the poles!\n\nYou're caught in the beam. Trillions of electron volts tear through you.\n\nYour atoms are ionized, scattered across the cosmos.\n\n=== THE GAMMA IGNITION ===\n\nYou died, transformed into pure energy.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    }
+};
+
+function makeClickable(text, command) {
+    return `<span class="clickable-cmd" onclick="executeCommand('${command}')">${text}</span>`;
+}
+
+function executeCommand(cmd) {
+    const lines = document.querySelectorAll('.command-line span[contenteditable="true"]');
+    if(lines.length > 0) {
+        const input = lines[lines.length - 1];
+        input.textContent = cmd;
+        input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+    }
+}
+
+const trainArt = `      ====        ________                ___________
+  _D _|  |_______/        \\__I_I_____===__|_________|
+   |(_)---  |   H\\________/ |   |        =|___ ___|
+   /     |  |   H  |  |     |   |         ||_| |_||
+  |      |  |   H  |__--------------------| [___] |
+  | ________|___H__/__|_____/[][]~\\_______|       |
+  |/ |   |-----------I_____I [][] []  D   |=======|__
+__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__
+ |/-=|___|=O=====O=====O=====O   |_____/~\\___/
+  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/               `;
+
+function animateTrain() {
+    const output = document.createElement('div');
+    output.className = 'output';
+    output.style.overflow = 'hidden';
+    output.style.whiteSpace = 'pre';
+    output.style.position = 'relative';
+
+    const trainContainer = document.createElement('div');
+    trainContainer.textContent = trainArt;
+    trainContainer.style.position = 'relative';
+    trainContainer.style.left = '100%';
+    trainContainer.style.display = 'inline-block';
+
+    output.appendChild(trainContainer);
+    terminal.appendChild(output);
+
+    let position = 100;
+    const interval = setInterval(() => {
+        position -= 2;
+        trainContainer.style.left = position + '%';
+
+        if(position < -100) {
+            clearInterval(interval);
+            const message = document.createElement('div');
+            message.className = 'output';
+            message.textContent = "Here's a steam locomotive for you! 🚂 (This is what happens when you fat-finger 'ls')";
+            terminal.appendChild(message);
+            createPrompt();
+        }
+    }, 50);
+}
+
+function runBuiltinCommand(cmd) {
+    const cmdLower = cmd.toLowerCase();
+
+    // Black hole adventure game
+    if(bhAdventureActive) {
+        if(cmdLower === 'quit' || cmdLower === 'exit') {
+            bhAdventureActive = false;
+            return "Exiting black hole adventure. Back to normal terminal.";
+        } else if(cmdLower === 'restart') {
+            bhCurrentNode = 'start';
+            const node = bhAdventure[bhCurrentNode];
+            const choicesText = Object.keys(node.choices).length > 0
+                ? '\n\n> ' + Object.keys(node.choices).map(c => makeClickable(c, c)).join(' | ')
+                : '';
+            return node.text + choicesText;
+        } else if(bhAdventure[bhCurrentNode].choices[cmdLower]) {
+            bhCurrentNode = bhAdventure[bhCurrentNode].choices[cmdLower];
+            const node = bhAdventure[bhCurrentNode];
+            const choicesText = Object.keys(node.choices).length > 0
+                ? '\n\n> ' + Object.keys(node.choices).map(c => makeClickable(c, c)).join(' | ')
+                : '';
+            // Clear the terminal for narrative flow
+            terminal.innerHTML = '';
+            const output = document.createElement('div');
+            output.className = 'output';
+            output.innerHTML = node.text + choicesText;
+            terminal.appendChild(output);
+            createPrompt();
+            return null; // Don't create another prompt
+        } else {
+            const validChoices = Object.keys(bhAdventure[bhCurrentNode].choices);
+            if(validChoices.length > 0) {
+                return `Invalid choice. Try: ${validChoices.join(' | ')}`;
+            } else {
+                return "Type 'restart' to play again or 'quit' to exit.";
+            }
+        }
+    }
+
+    if(cmdLower === 'ls') return Object.keys(sections).join('  ');
+    else if(cmdLower === 'sl') {
+        animateTrain();
+        return null; // null signals not to create a new prompt
+    }
+    else if(cmdLower === 'help') return `This is a terminal-style interface. Type commands and press Enter.\n\nBasic commands:\n  ${makeClickable('ls', 'ls')}                List all sections\n  ${makeClickable('publications', 'publications')}      View publications\n  ${makeClickable('research', 'research')}          View research\n  ${makeClickable('teaching', 'teaching')}          View teaching\n  ${makeClickable('contact', 'contact')}           View contact info\n  ${makeClickable('other', 'other')}             View other projects\n  ${makeClickable('cat', 'cat')} &lt;section&gt;     Alternative syntax (e.g., 'cat research')\n  ${makeClickable('clear', 'clear')}             Clear screen\n  ${makeClickable('exit', 'exit')}              Close this tab\n\nQuick actions:\n  ${makeClickable('mail', 'mail')}              Email Majo\n  ${makeClickable('cv', 'cv')}                Download CV\n  ${makeClickable('links', 'links')}             Show all contact links\n\nTips:\n  • Commands are case-insensitive\n  • Use Tab for auto-completion\n  • Use ↑/↓ arrows for command history\n  • Try other common Unix commands for surprises!`;
+    else if(cmdLower === 'cat') {
+        return "cat: missing operand\nTry 'cat &lt;section&gt;' or just type the section name.";
+    } else if(cmdLower.startsWith('cat ')) {
+        const name = cmdLower.split(' ')[1];
+        return sections[name] || `cat: ${cmdLower.split(' ')[1]}: No such file or directory`;
+    } else if(cmdLower === 'clear') {
+        terminal.innerHTML = '';
+        return '';
+    } else if(cmdLower === 'exit' || cmdLower === 'quit') {
+        window.close();
+        return "Goodbye! (If the tab didn't close, your browser blocked it for security reasons)";
+    } else if(cmdLower === 'whoami') {
+        return "You are a visitor exploring Majo's corner of the internet.";
+    } else if(cmdLower === 'sudo' || cmdLower.startsWith('sudo ')) {
+        return "Nice try! You don't need root access here. 😎";
+    } else if(cmdLower === 'lisa') {
+        return "     *\n    / \\\n   /   \\\n  *-----*\n\nLISA: Laser Interferometer Space Antenna\nThree spacecraft in a triangular formation\nDetecting gravitational waves from space! 🛰️";
+    } else if(cmdLower === 'mail' || cmdLower === 'email') {
+        window.location.href = 'mailto:bustamante.rosell@vanderbilt.edu';
+        return "Opening your email client...";
+    } else if(cmdLower === 'cv') {
+        window.open('cv.pdf', '_blank');
+        return "Opening CV in new tab...";
+    } else if(cmdLower === 'links') {
+        return "Quick Links:\n• Email: bustamante [dot] rosell [at] vanderbilt [dot] edu\n• ORCID: <a href='https://orcid.org/0000-0003-0416-9818' target='_blank'>0000-0003-0416-9818</a>\n• GitHub: <a href='https://github.com/majoburo' target='_blank'>github.com/majoburo</a>\n• CV: <a href='cv.pdf' target='_blank'>Download PDF</a>";
+    } else if(cmdLower === 'about') {
+        return sections['home'];
+    } else if(cmdLower.startsWith('rm ')) {
+        const response = rmResponses[rmCounter % rmResponses.length];
+        rmCounter++;
+        return response;
+    } else if(cmdLower === 'bh' || cmdLower === 'blackhole') {
+        bhAdventureActive = true;
+        bhCurrentNode = 'start';
+        const node = bhAdventure[bhCurrentNode];
+        const choicesText = Object.keys(node.choices).length > 0
+            ? '\n\n> ' + Object.keys(node.choices).map(c => makeClickable(c, c)).join(' | ')
+            : '';
+        // Clear terminal and show adventure start
+        terminal.innerHTML = '';
+        const output = document.createElement('div');
+        output.className = 'output';
+        output.innerHTML = node.text + choicesText;
+        terminal.appendChild(output);
+        createPrompt();
+        return null; // Don't create another prompt
+    } else if(cmdLower === 'cd' || cmdLower.startsWith('cd ')) {
+        const args = cmd.trim().split(/\s+/);
+        if(args.length === 1) {
+            return "cd: missing operand";
+        } else {
+            return `cd: ${args[1]}: Not a directory`;
+        }
+    } else if(sections[cmdLower]) {
+        return sections[cmdLower];
+    } else {
+        return `'${cmd}' is not recognized. Type 'help'.`;
+    }
+}
+
+function createPrompt(prefill='') {
+    const line = document.createElement('div');
+    line.className = 'command-line';
+    // Don't show prompt during black hole adventure
+    if(bhAdventureActive) {
+        line.innerHTML = '<span class="prompt"></span>';
+    } else {
+        line.innerHTML = '<span class="prompt">user@website:~$ </span>';
+    }
+    
+    const input = document.createElement('span');
+    input.contentEditable = true;
+    input.spellcheck = false;
+    input.textContent = prefill;
+    line.appendChild(input);
+    
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    cursor.textContent = ' ';
+    line.appendChild(cursor);
+    
+    terminal.appendChild(line);
+    input.focus();
+    line.scrollIntoView({behavior: "smooth", block: "end"});
+
+    input.addEventListener('keydown', function(e) {
+        if(e.key === 'Enter') {
+            e.preventDefault();
+            const command = input.textContent.trim();
+            if(command) commandHistory.push(command);
+            historyIndex = commandHistory.length;
+            input.contentEditable = false;
+            line.removeChild(cursor);
+            const outputText = runBuiltinCommand(command);
+            if(outputText !== null) {
+                if(outputText) {
+                    const output = document.createElement('div');
+                    output.className = 'output';
+                    output.innerHTML = outputText; // use innerHTML to allow links
+                    terminal.appendChild(output);
+                }
+                createPrompt();
+            }
+        } else if(e.key === 'Tab') {
+            e.preventDefault();
+            const currentText = input.textContent.trim();
+            const parts = currentText.split(' ');
+
+            // If we're completing an argument (e.g., 'cat pub<tab>')
+            if(parts.length > 1) {
+                const baseCmd = parts[0];
+                const partialArg = parts[parts.length - 1];
+                const sectionNames = Object.keys(sections);
+                const matches = sectionNames.filter(name => name.startsWith(partialArg.toLowerCase()));
+
+                if(matches.length === 1) {
+                    parts[parts.length - 1] = matches[0];
+                    input.textContent = parts.join(' ');
+                    placeCaretAtEnd(input);
+                } else if(matches.length > 1) {
+                    const output = document.createElement('div');
+                    output.className = 'output';
+                    output.textContent = matches.join('  ');
+                    input.contentEditable = false;
+                    line.removeChild(cursor);
+                    terminal.appendChild(output);
+                    createPrompt(currentText);
+                }
+            } else {
+                // Completing the command itself
+                const allCommands = ['ls', 'help', 'clear', 'cat', 'exit', 'mail', 'cv', 'links', 'about', ...Object.keys(sections)];
+                const matches = allCommands.filter(cmd => cmd.startsWith(currentText.toLowerCase()));
+
+                if(matches.length === 1) {
+                    input.textContent = matches[0];
+                    placeCaretAtEnd(input);
+                } else if(matches.length > 1) {
+                    const output = document.createElement('div');
+                    output.className = 'output';
+                    output.textContent = matches.join('  ');
+                    input.contentEditable = false;
+                    line.removeChild(cursor);
+                    terminal.appendChild(output);
+                    createPrompt(currentText);
+                }
+            }
+        } else if(e.key === 'ArrowUp') {
+            e.preventDefault();
+            if(commandHistory.length > 0) {
+                historyIndex = Math.max(historyIndex-1, 0);
+                input.textContent = commandHistory[historyIndex];
+                placeCaretAtEnd(input);
+            }
+        } else if(e.key === 'ArrowDown') {
+            e.preventDefault();
+            if(commandHistory.length > 0) {
+                historyIndex = Math.min(historyIndex+1, commandHistory.length);
+                if(historyIndex === commandHistory.length) input.textContent = '';
+                else input.textContent = commandHistory[historyIndex];
+                placeCaretAtEnd(input);
+            }
+        }
+    });
+}
+
+function placeCaretAtEnd(el) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    el.focus();
+}
+
+document.addEventListener('click', () => {
+    const lines = document.querySelectorAll('.command-line span[contenteditable="true"]');
+    if(lines.length > 0) lines[lines.length-1].focus();
+});
+
+function bootSequence() {
+    const banner = document.createElement('div');
+    banner.className = 'output';
+    banner.innerHTML = `
+===================================================
+    María José Bustamante Rosell (a.k.a. Majo)
+===================================================
+
+Try these commands to explore:
+  ${makeClickable('publications', 'publications')}  ${makeClickable('research', 'research')}  ${makeClickable('teaching', 'teaching')}  ${makeClickable('contact', 'contact')}
+
+Or type ${makeClickable('ls', 'ls')} to list all sections, ${makeClickable('help', 'help')} for more info.
+`;
+    terminal.appendChild(banner);
+    createPrompt();
+}
+
+bootSequence();
+</script>
+
+</body>
+</html>
