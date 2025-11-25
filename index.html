@@ -90,181 +90,119 @@ let bhChoiceIndex = 0;
 
 const bhAdventure = {
     'start': {
-        text: "=== DEATH BY BLACK HOLE: A Space Adventure ===\nBased on Kurzgesagt's poster\n\nYou find yourself hurtling toward a black hole. The sight is hypnotizing and deadly. This is it. This is how it ends for you.\n\nDo you want the short answer or the long answer of how dying works?",
+        text: "=== DEATH BY BLACK HOLE: A Space Adventure ===\nBased on Kurzgesagt's poster\n\nYou find yourself hurtling toward a black hole. The sight is hypnotizing and deadly. This is it. This is how it ends for you.\n\nDo you want the short answer or the long answer?",
         choices: {
             'short': 'short_answer',
-            'long': 'long_intro'
+            'long': 'long_answer'
         }
     },
     'short_answer': {
         text: "You die.\n\n=== THE END ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
         choices: {}
     },
-    // LONG ANSWER tree
-    'long_intro': {
-        text: "Let's see what black holes do to you exactly.\n\nYou're falling faster and faster toward the singularity. But what kind of black hole is it?\n\nIs it supermassive or stellar-mass?",
+    'long_answer': {
+        text: "Let's see what black holes do to you exactly.\n\nYou're falling faster and faster toward the singularity.\n\nIs it a supermassive black hole?",
         choices: {
-            'supermassive': 'supermassive_intro',
-            'stellar': 'stellar_intro'
+            'yes': 'supermassive_q1',
+            'no': 'stellar_death'
         }
     },
-    // STELLAR PATH
-    'stellar_intro': {
-        text: "Oh no! You approach a stellar-mass black hole. These are the smaller, more common kind. Bad news for you: the tidal forces here are extreme, even before you reach the event horizon.\n\nDo you try to resist, or accept your fate?",
+
+    // STELLAR PATH - only one ending
+    'stellar_death': {
+        text: "A stellar-mass black hole! The tidal forces are extreme.\n\nThe difference in gravity between your head and feet is immense. You are stretched into a thin strand of atoms.\n\n=== THE RELATIVE SPAGHETTIFICATION ===\n\nYou died.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+
+    // SUPERMASSIVE PATHS - multiple routes to 5 endings
+    'supermassive_q1': {
+        text: "A supermassive black hole! The tidal forces at the horizon are weaker.\n\nYou cross the event horizon intact. Time outside speeds up.\n\nDo you watch the universe age?",
         choices: {
-            'resist': 'stellar_resist',
-            'accept': 'stellar_spaghettification'
+            'yes': 'watch_universe',
+            'no': 'focus_self'
         }
     },
-    'stellar_resist': {
-        text: "You try to resist the gravity... but it's futile. The difference in gravity between your head and feet is so huge, you are stretched into a long spaghetti strand.\n\n=== THE RELATIVE SPAGHETTIFICATION ===\n\nYou die, stretched and atomized before you even cross the horizon.\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    'stellar_spaghettification': {
-        text: "You accept your fate. You are spaghettified: stretched into a thin string of atoms, long before you reach the event horizon.\n\nEverything goes dark as you become a noodle.\n\n=== THE RELATIVE SPAGHETTIFICATION ===\n\nYou died.\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    // SUPERMASSIVE PATH
-    'supermassive_intro': {
-        text: "A supermassive black hole! Good news: the tidal forces at the event horizon are much weaker. You cross the event horizon in one piece (for now).\n\nWhat do you do as you fall?",
+
+    'watch_universe': {
+        text: "Billions of years pass in seconds. Stars die, galaxies fade.\n\nDo you keep watching until the end?",
         choices: {
-            'observe': 'supermassive_observe',
-            'struggle': 'supermassive_struggle'
+            'yes': 'eternity_ending',
+            'no': 'look_away'
         }
     },
-    'supermassive_observe': {
-        text: "You decide to observe the universe as you fall. Time outside speeds up—billions of years pass in seconds. You witness the death of stars and the fading of galaxies.\n\nDo you keep watching, or focus on your own fate?",
+
+    'eternity_ending': {
+        text: "You watch as the universe ends before you reach the singularity. The cosmic background fades. All matter decays.\n\n=== THE FAST-FORWARD ETERNITY ===\n\nYou died experiencing the end of time.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+
+    'look_away': {
+        text: "You look away from the dying universe.\n\nSpace and time have swapped roles. All paths lead inward now.\n\nDo you try to fight it?",
         choices: {
-            'watch': 'supermassive_eternity',
-            'self': 'supermassive_fall'
+            'yes': 'attempt_escape',
+            'no': 'singularity_ending'
         }
     },
-    'supermassive_eternity': {
-        text: "You keep watching. From your perspective, the universe ends before you hit the singularity. You see the cosmic background fade, and all matter decay.\n\n=== THE FAST-FORWARD ETERNITY ===\n\nYou died, experiencing the end of time itself.\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    'supermassive_fall': {
-        text: "You focus on your own fate. As you fall, space and time swap roles. No force in the universe can stop you now.\n\nDo you try to use physics to escape, or accept your fate?",
+
+    'focus_self': {
+        text: "You focus on your own fate as you fall.\n\nSpace and time swap roles. The singularity pulls you inexorably.\n\nDo you accept this?",
         choices: {
-            'physics': 'supermassive_physics',
-            'accept': 'supermassive_singularity'
+            'yes': 'singularity_ending',
+            'no': 'try_physics'
         }
     },
-    'supermassive_physics': {
-        text: "You attempt the Penrose process: maybe you can use the black hole's rotation to slingshot out of the ergosphere!\n\nDo you try to slingshot out, or go deeper toward the singularity?",
+
+    'try_physics': {
+        text: "You attempt to use the Penrose process—extracting energy from the black hole's rotation!\n\nYou're in the ergosphere. Frame-dragging pulls you around.\n\nDo you try to slingshot out?",
         choices: {
-            'slingshot': 'supermassive_slingshot',
-            'deeper': 'supermassive_singularity'
+            'yes': 'slingshot_attempt',
+            'no': 'dive_deeper'
         }
     },
-    'supermassive_slingshot': {
-        text: "You fire your thrusters! The black hole's rotation flings you outward. But tidal forces rip your ship apart. Your atoms are scattered, trapped in orbit forever.\n\n=== THE RETROGRADING ===\n\nYou died, but your atoms orbit eternally as cosmic debris.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+
+    'slingshot_attempt': {
+        text: "You fire your thrusters at maximum! The black hole's rotation flings you outward.\n\nBut tidal forces rip your ship apart. Debris scatters into eternal orbit.\n\n=== THE RETROGRADING ===\n\nYou died, but your atoms orbit forever.\n\n(Type 'restart' to try again, or 'quit' to exit)",
         choices: {}
     },
-    'supermassive_singularity': {
-        text: "You plunge ever deeper. The singularity awaits: a point of infinite density and zero volume. Space and time are meaningless here.\n\nYou are crushed to nothingness, emitting X-rays as you go.\n\n=== THE X-RAY SINGULARITY ===\n\nYou died in the most extreme place in the universe.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+
+    'dive_deeper': {
+        text: "You plunge deeper toward the singularity. Infinite density awaits.\n\nSpace and time are meaningless here.\n\n=== THE X-RAY SINGULARITY ===\n\nYou died, crushed and emitting X-rays.\n\n(Type 'restart' to try again, or 'quit' to exit)",
         choices: {}
     },
-    'supermassive_struggle': {
-        text: "You try to struggle and escape. Maybe you could orbit the black hole?\n\nDo you attempt a stable orbit, or try to escape immediately?",
+
+    'singularity_ending': {
+        text: "You accept your fate. The singularity awaits: infinite density, zero volume.\n\nYou are crushed to nothingness, emitting X-rays as you compress.\n\n=== THE X-RAY SINGULARITY ===\n\nYou died in the most extreme place in the universe.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        choices: {}
+    },
+
+    'attempt_escape': {
+        text: "You try to escape! Maybe you can orbit near the edge?\n\nYou're close to the photon sphere.\n\nDo you try to stabilize your orbit?",
         choices: {
-            'orbit': 'supermassive_orbit',
-            'escape': 'supermassive_escape'
+            'yes': 'orbit_attempt',
+            'no': 'escape_now'
         }
     },
-    'supermassive_orbit': {
-        text: "You attempt a stable orbit near the event horizon, but you're too close. Your orbit decays.\n\nDo you try to fire your engines to escape, or do you stay and observe?",
+
+    'orbit_attempt': {
+        text: "You attempt a stable orbit, but you're too close. Your orbit decays.\n\nDo you observe the surroundings?",
         choices: {
-            'engines': 'supermassive_escape',
-            'observe': 'supermassive_gamma'
+            'yes': 'gamma_death',
+            'no': 'fossil_ending'
         }
     },
-    'supermassive_escape': {
-        text: "You fire your engines at full power. But you're in the photon sphere—only light can orbit here. Your ship spirals endlessly, orbit decaying atom by atom.\n\n=== THE SWIRLED FOSSIL ===\n\nYou died, fossilized in an eternal orbit.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+
+    'gamma_death': {
+        text: "You observe the accretion disk. Suddenly, a jet of gamma radiation erupts from the poles!\n\nTrillions of electron volts tear through you. Your atoms scatter across the cosmos.\n\n=== THE GAMMA IGNITION ===\n\nYou died, transformed into pure energy.\n\n(Type 'restart' to try again, or 'quit' to exit)",
         choices: {}
     },
-    'supermassive_gamma': {
-        text: "You stay and observe the accretion disk. Suddenly, a jet of gamma radiation erupts from the poles! Trillions of electron volts tear through you. Your atoms are scattered across the cosmos.\n\n=== THE GAMMA IGNITION ===\n\nYou died, transformed into pure energy.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+
+    'escape_now': {
+        text: "You fire your engines at full power trying to break free!\n\nBut you're in the photon sphere. Only light can orbit here.\n\n=== THE SWIRLED FOSSIL ===\n\nYou died, fossilized in an eternal orbit.\n\n(Type 'restart' to try again, or 'quit' to exit)",
         choices: {}
     },
-    // PHOTON PATH
-    'photon_entry': {
-        text: "You choose the path of a photon, a massless particle of light.\n\nYou approach the black hole's photon sphere, the perfect orbit for light.\n\nDo you orbit forever, or try to escape?",
-        choices: {
-            'orbit': 'photon_orbit',
-            'escape': 'photon_escape'
-        }
-    },
-    'photon_orbit': {
-        text: "You are trapped in the photon sphere, forever circling the event horizon at the speed of light.\n\nTime is meaningless. To distant observers, you never move. For you, existence is an endless ring.\n\n=== THE PHOTON PRISON ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    'photon_escape': {
-        text: "You try to escape the black hole's pull, but only a precise trajectory allows light to escape.\n\nYou just barely make it, your wavelength redshifted to oblivion.\n\nYou escape, but are now stretched to near-infinite wavelength—the faintest whisper of your former self.\n\n=== THE REDSHIFTED MEMORY ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    // MASSLESS PARTICLE PATH
-    'massless_entry': {
-        text: "You are a massless particle, like a graviton or a neutrino (if massless!).\n\nYou approach the event horizon with indifference. Gravity bends your path, but you move at the speed limit of the universe.\n\nDo you try to interact, or pass through?",
-        choices: {
-            'interact': 'massless_interact',
-            'pass': 'massless_pass'
-        }
-    },
-    'massless_interact': {
-        text: "You attempt to interact, but you are nearly invisible to normal matter.\n\nYou pass through the accretion disk unharmed, but the black hole warps your path.\n\nYou are lost in the cosmic background, your journey unending.\n\n=== THE LONELY PARTICLE ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    'massless_pass': {
-        text: "You pass straight through the warped spacetime, your path forever altered by the black hole's gravity.\n\nYou are now part of the gravitational waves echoing through the cosmos.\n\n=== THE RIPPLE CARRIER ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    // EXOTIC PARTICLE PATH
-    'exotic_entry': {
-        text: "You are something exotic: dark matter, cosmic string, or strangelet.\n\nBlack holes are mysterious, but so are you.\n\nDo you merge with the black hole, or try to resist?",
-        choices: {
-            'merge': 'exotic_merge',
-            'resist': 'exotic_resist'
-        }
-    },
-    'exotic_merge': {
-        text: "You merge with the black hole, adding your exotic mass or properties to its singularity.\n\nPerhaps you change the fate of the universe... or perhaps you vanish without a trace.\n\n=== THE STRANGE FUSION ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    'exotic_resist': {
-        text: "You resist the black hole's pull, but even the strangest matter cannot escape gravity forever.\n\nYou are stretched and torn, but your legacy endures as a cosmic mystery.\n\n=== THE ULTIMATE OUTSIDER ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    // HAWKING RADIATION PATH
-    'hawking_entry': {
-        text: "You are a quantum fluctuation, a virtual particle pair at the event horizon.\n\nDo you fall in, or escape as Hawking radiation?",
-        choices: {
-            'fall': 'hawking_fall',
-            'escape': 'hawking_escape'
-        }
-    },
-    'hawking_fall': {
-        text: "You fall into the black hole, carrying negative energy.\n\nThe black hole shrinks ever so slightly. Your partner escapes to infinity.\n\n=== THE SACRIFICIAL PARTICLE ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    'hawking_escape': {
-        text: "You escape as Hawking radiation, carrying energy away from the black hole.\n\nYou are now part of the slow evaporation of a cosmic giant.\n\n=== THE HAWKING GHOST ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    // SCHRÖDINGER PATH
-    'schrodinger_entry': {
-        text: "You are Schrödinger's explorer: both alive and dead, inside and outside the event horizon.\n\nQuantum mechanics and general relativity blur together.\n\nDo you observe, or remain uncertain?",
-        choices: {
-            'observe': 'schrodinger_observe',
-            'uncertain': 'schrodinger_uncertain'
-        }
-    },
-    'schrodinger_observe': {
-        text: "You observe yourself crossing the event horizon. For you, nothing special happens, but to outsiders, you freeze at the edge.\n\nYou are both falling and forever at the threshold.\n\n=== THE QUANTUM PARADOX ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
-        choices: {}
-    },
-    'schrodinger_uncertain': {
-        text: "You choose uncertainty. Your fate is unknowable, forever entangled with the mysteries of black holes.\n\n=== THE SUPERPOSITION ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
+
+    'fossil_ending': {
+        text: "Your orbit continues to decay. Your ship spirals endlessly, atom by atom.\n\nTime passes. Eons.\n\n=== THE SWIRLED FOSSIL ===\n\nYou died, fossilized in an eternal orbit.\n\n(Type 'restart' to try again, or 'quit' to exit)",
         choices: {}
     }
 };
