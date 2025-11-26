@@ -90,33 +90,33 @@ let bhChoiceIndex = 0;
 
 const bhAdventure = {
     'start': {
-        text: "=== DEATH BY BLACK HOLE: A Space Adventure ===\nBased on Kurzgesagt's poster\n\nYou find yourself hurtling toward a black hole. The sight is hypnotizing and deadly. This is it. This is how it ends for you.\n\nDo you want the short answer or the long answer?",
+        text: "=== BLACK HOLE TERMINATION PROTOCOL ===\nAperture Science Astrophysical Hazard Simulation\n\nYou are currently falling toward a black hole. This is expected. This is necessary.\n\nDo you want the concise termination summary or the verbose operational report?",
         choices: {
             'short': 'short_answer',
             'long': 'long_answer'
         }
     },
+
     'short_answer': {
-        text: "You die.\n\n=== THE END ===\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "Observation complete.\nResult: You died.\n\n=== TEST TERMINATED ===\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     },
+
     'long_answer': {
-        text: "Let's see what black holes do to you exactly.\n\nYou're falling faster and faster toward the singularity.\n\nIs it a supermassive black hole?",
+        text: "Acknowledged: Detailed operational report initiated.\n\nYou are accelerating toward the singularity at a rate consistent with prior test subjects.\n\nDiagnostic question: Is the black hole supermassive?",
         choices: {
             'yes': 'supermassive_q1',
             'no': 'stellar_death'
         }
     },
 
-    // STELLAR PATH - only one ending
     'stellar_death': {
-        text: "A stellar-mass black hole! The tidal forces are extreme.\n\nThe difference in gravity between your head and feet is immense. You are stretched into a thin strand of atoms.\n\n=== THE RELATIVE SPAGHETTIFICATION ===\n\nYou died.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "A stellar-mass black hole is confirmed.\nTidal gradients exceed human structural integrity thresholds.\nYour body is being converted into a linear arrangement of constituent atoms.\n\n=== SPAGHETTIFICATION: PROCEDURE COMPLETE ===\nYou died.\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     },
 
-    // SUPERMASSIVE PATHS - multiple routes to 5 endings
     'supermassive_q1': {
-        text: "A supermassive black hole! The tidal forces at the horizon are weaker.\n\nYou cross the event horizon intact. Time outside speeds up.\n\nDo you watch the universe age?",
+        text: "Supermassive classification verified.\nTidal forces are below lethal thresholds at the event horizon.\nExternal temporal flow is accelerating.\n\nDo you wish to observe the universe as it ages?",
         choices: {
             'yes': 'watch_universe',
             'no': 'focus_self'
@@ -124,7 +124,7 @@ const bhAdventure = {
     },
 
     'watch_universe': {
-        text: "It feels like billions of years pass in seconds. Stars seem to age in fast-motion, galaxies drift and warp.\n\nDo you keep watching?",
+        text: "You are now observing the accelerated evolution of cosmic structures.\nStars dim, galaxies collide, civilizations hypothetically perish.\n\nDo you continue this observation?",
         choices: {
             'yes': 'eternity_ending',
             'no': 'look_away'
@@ -132,12 +132,12 @@ const bhAdventure = {
     },
 
     'eternity_ending': {
-        text: "Time outside speeds up dramatically. You see stars age rapidly, galaxies shift and collide in fast-forward.\n\nBut you won't witness the end of everything—just a dramatic preview before the singularity claims you.\n\n=== THE FAST-FORWARD ETERNITY ===\n\nYou died watching the universe in fast-forward.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "External temporal flow continues at maximum acceleration.\nYour consciousness notes the accelerated decay and transformation of cosmic matter.\n\nAll procedures will conclude shortly.\n\n=== FAST-FORWARD ETERNITY COMPLETE ===\nYou died while observing accelerated cosmic events.\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     },
 
     'look_away': {
-        text: "You look away from the dying universe.\n\nSpace and time have swapped roles. All paths lead inward now.\n\nDo you try to fight it?",
+        text: "Visual focus withdrawn.\nSpace and time have been redefined in local reference frame.\nAll paths now converge toward singularity.\n\nDo you attempt to resist?",
         choices: {
             'yes': 'attempt_escape',
             'no': 'singularity_ending'
@@ -145,7 +145,7 @@ const bhAdventure = {
     },
 
     'focus_self': {
-        text: "You focus on your own fate as you fall.\n\nSpace and time swap roles. The singularity pulls you inexorably.\n\nDo you accept this?",
+        text: "Internal monitoring: consciousness fixed on personal trajectory.\nSpacetime metric indicates inevitable convergence with singularity.\n\nDo you accept this outcome?",
         choices: {
             'yes': 'singularity_ending',
             'no': 'try_physics'
@@ -153,7 +153,7 @@ const bhAdventure = {
     },
 
     'try_physics': {
-        text: "You attempt to use the Penrose process—extracting energy from the black hole's rotation!\n\nYou're in the ergosphere. Frame-dragging pulls you around.\n\nDo you try to slingshot out?",
+        text: "Attempting energy extraction via Penrose process.\nFrame-dragging detected. Rotational energy available for theoretical escape.\n\nDo you attempt slingshot maneuver?",
         choices: {
             'yes': 'slingshot_attempt',
             'no': 'dive_deeper'
@@ -161,22 +161,22 @@ const bhAdventure = {
     },
 
     'slingshot_attempt': {
-        text: "You fire your thrusters at maximum! The black hole's rotation flings you outward.\n\nBut tidal forces rip your ship apart. Debris scatters into orbit, spiraling slowly inward over countless revolutions.\n\n=== THE RETROGRADING ===\n\nYou died, but your atoms will orbit for eons.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "Thrusters engaged at maximum output.\nRotational energy partially transfers. Ship integrity compromised.\nDebris enters decaying orbit, spiraling indefinitely.\n\n=== RETROGRADING: PROCEDURE FAILED ===\nYou died; your atoms now follow calculated orbital paths.\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     },
 
     'dive_deeper': {
-        text: "You plunge deeper toward the singularity. Infinite density awaits.\n\nSpace and time are meaningless here.\n\n=== THE X-RAY SINGULARITY ===\n\nYou died, crushed and emitting X-rays.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "You continue inward. Local spacetime curvature exceeds all known human-safe parameters.\nCompression of matter is complete.\n\n=== X-RAY SINGULARITY TERMINATION ===\nYou died.\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     },
 
     'singularity_ending': {
-        text: "You accept your fate. The singularity awaits: infinite density, zero volume.\n\nYou are crushed to nothingness, emitting X-rays as you compress.\n\n=== THE X-RAY SINGULARITY ===\n\nYou died in the most extreme place in the universe.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "Outcome accepted. All trajectories lead to central singularity.\nVolume approaches zero. Density approaches infinity.\n\n=== FINAL COMPRESSION ===\nYou died.\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     },
 
     'attempt_escape': {
-        text: "You try to escape! Maybe you can orbit near the edge?\n\nYou're close to the photon sphere.\n\nDo you try to stabilize your orbit?",
+        text: "Escape protocol initiated. Trajectory approaches photon sphere.\nDo you attempt to stabilize orbit?",
         choices: {
             'yes': 'orbit_attempt',
             'no': 'escape_now'
@@ -184,7 +184,7 @@ const bhAdventure = {
     },
 
     'orbit_attempt': {
-        text: "You attempt a stable orbit, but you're too close. Your orbit decays.\n\nDo you observe the surroundings?",
+        text: "Orbit stabilization unsuccessful. Decay detected.\nDo you observe the surrounding environment?",
         choices: {
             'yes': 'gamma_death',
             'no': 'fossil_ending'
@@ -192,17 +192,17 @@ const bhAdventure = {
     },
 
     'gamma_death': {
-        text: "You observe the accretion disk. Suddenly, a jet of gamma radiation erupts from the poles!\n\nTrillions of electron volts tear through you. Your atoms scatter across the cosmos.\n\n=== THE GAMMA IGNITION ===\n\nYou died, transformed into pure energy.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "Observation of accretion disk registered.\nUnexpected gamma-ray jet intersects trajectory.\nEnergy deposition: lethal.\n\n=== GAMMA IGNITION ===\nYou died, converted into energetic quanta.\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     },
 
     'escape_now': {
-        text: "You fire your engines at full power trying to break free!\n\nBut you're in the photon sphere. Only light can orbit here. Your ship spirals inward over countless orbits.\n\n=== THE SWIRLED FOSSIL ===\n\nYou died, completing eons of revolutions before the end.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "Full-thrust escape attempt initiated.\nPhoton sphere prevents stable orbit; decay ensues.\nSpiraling inward continues.\n\n=== SWIRLED FOSSIL ===\nYou died after completing countless orbits.\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     },
 
     'fossil_ending': {
-        text: "Your orbit continues to decay. Your ship spirals inward, atom by atom, completing countless revolutions.\n\nTime passes. Eons.\n\n=== THE SWIRLED FOSSIL ===\n\nYou died after orbiting for an eternity.\n\n(Type 'restart' to try again, or 'quit' to exit)",
+        text: "Orbit decay ongoing. Each revolution is logged. Time progresses, but escape is impossible.\n\n=== SWIRLED FOSSIL COMPLETE ===\nYou died.\n\n(Type 'restart' to re-engage or 'quit' to exit simulation)",
         choices: {}
     }
 };
