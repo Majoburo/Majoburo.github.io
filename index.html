@@ -522,15 +522,19 @@ function animateSnakeBar() {
     const output = document.createElement('pre'); // Use <pre> instead of div
     output.className = 'output';
     output.style.whiteSpace = 'pre';
-    output.style.lineHeight = '1.0';
+
+    // Force exact square cells to prevent mobile drift
+    const computedFontSize = parseInt(getComputedStyle(document.body).fontSize);
+    output.style.fontSize = computedFontSize + 'px';
+    output.style.lineHeight = computedFontSize + 'px'; // MUST match font-size
+
+    output.style.fontFamily = "Menlo, Consolas, 'Courier New', monospace"; // Better monospace fonts
+    output.style.letterSpacing = '0px';
+    output.style.wordSpacing = '0px';
     output.style.overflowX = 'hidden';
     output.style.overflowY = 'hidden';
-    output.style.fontFamily = "'Courier New', Courier, monospace";
-    output.style.fontSize = getComputedStyle(document.body).fontSize; // Use exact computed size
-    output.style.letterSpacing = '0';
-    output.style.wordSpacing = '0';
-    output.style.WebkitTextSizeAdjust = '100%';
-    output.style.textSizeAdjust = '100%';
+    output.style.WebkitTextSizeAdjust = 'none'; // Prevent mobile text scaling
+    output.style.textSizeAdjust = 'none';
     output.style.margin = '0';
     output.style.padding = '0';
     terminal.appendChild(output);
@@ -559,7 +563,7 @@ function animateSnakeBar() {
         const lines = rendered.split('\n');
         const maxLineLength = Math.max(...lines.map(l => l.length));
 
-        output.textContent = `SnakeBar Progress: ${percentage}% [v3 - non-breaking space]\n\n${rendered}`;
+        output.textContent = `SnakeBar Progress: ${percentage}% [v4 - square cells fix]\n\n${rendered}`;
 
         // Log if we detect width issues
         if (maxLineLength > terminalWidth) {
