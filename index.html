@@ -504,15 +504,23 @@ function animateSnakeBar() {
     document.body.removeChild(tempDiv);
 
     // Calculate actual character grid that fits on screen
-    const availableWidth = window.innerWidth - 40; // Account for padding
-    const availableHeight = window.innerHeight - 60; // Account for padding, header, and progress text
-    const terminalWidth = Math.floor(availableWidth / charWidth);
-    const terminalHeight = Math.floor(availableHeight / charHeight);
+    // Use clientWidth for more accurate measurement, especially on mobile
+    const viewportWidth = Math.min(window.innerWidth, document.documentElement.clientWidth);
+    const viewportHeight = Math.min(window.innerHeight, document.documentElement.clientHeight);
+
+    const availableWidth = viewportWidth - 40; // Account for padding
+    const availableHeight = viewportHeight - 100; // Account for padding, header, and progress text
+    const terminalWidth = Math.max(10, Math.floor(availableWidth / charWidth)); // Minimum 10 chars
+    const terminalHeight = Math.max(8, Math.floor(availableHeight / charHeight)); // Minimum 8 lines
 
     const output = document.createElement('div');
     output.className = 'output';
     output.style.whiteSpace = 'pre';
     output.style.lineHeight = '1.0';
+    output.style.overflowX = 'hidden';
+    output.style.overflowY = 'hidden';
+    output.style.maxWidth = '100vw';
+    output.style.boxSizing = 'border-box';
     terminal.appendChild(output);
 
     const bar = new SnakeBar(100, {
