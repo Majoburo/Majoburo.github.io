@@ -543,6 +543,10 @@ function animateSnakeBar() {
         seed: Math.floor(Math.random() * 10000)
     });
 
+    // Set explicit width to prevent wrapping
+    output.style.width = (terminalWidth * charWidth) + 'px';
+    output.style.minWidth = output.style.width;
+
     let progress = 0;
     const interval = setInterval(() => {
         progress += 1;
@@ -550,7 +554,17 @@ function animateSnakeBar() {
 
         const rendered = bar.render();
         const percentage = bar.getPercentage();
+
+        // Check if any line exceeds expected width
+        const lines = rendered.split('\n');
+        const maxLineLength = Math.max(...lines.map(l => l.length));
+
         output.textContent = `SnakeBar Progress: ${percentage}%\n\n${rendered}`;
+
+        // Log if we detect width issues
+        if (maxLineLength > terminalWidth) {
+            console.log(`WARNING: Line length ${maxLineLength} exceeds terminalWidth ${terminalWidth}`);
+        }
 
         if (progress >= 100) {
             clearInterval(interval);
