@@ -496,10 +496,14 @@ function animateSnakeBar() {
     tempDiv.style.fontFamily = "'Courier New', Courier, monospace";
     tempDiv.style.fontSize = "max(16px, min(3vw, 20px))";
     tempDiv.style.whiteSpace = 'pre';
-    tempDiv.textContent = 'X';
+    tempDiv.style.lineHeight = '1.0';
+    tempDiv.style.WebkitTextSizeAdjust = 'none';
+    // Test with 10 characters to get more accurate width
+    tempDiv.textContent = '██████████';
     document.body.appendChild(tempDiv);
 
-    const charWidth = tempDiv.offsetWidth;
+    const charWidth = tempDiv.offsetWidth / 10; // Average width per character
+    tempDiv.textContent = '█';
     const charHeight = tempDiv.offsetHeight;
     document.body.removeChild(tempDiv);
 
@@ -517,10 +521,12 @@ function animateSnakeBar() {
     output.className = 'output';
     output.style.whiteSpace = 'pre';
     output.style.lineHeight = '1.0';
-    output.style.overflowX = 'hidden';
+    output.style.overflowX = 'auto';
     output.style.overflowY = 'hidden';
-    output.style.maxWidth = '100vw';
+    output.style.maxWidth = '100%';
     output.style.boxSizing = 'border-box';
+    output.style.wordBreak = 'keep-all';
+    output.style.WebkitTextSizeAdjust = 'none';
     terminal.appendChild(output);
 
     const bar = new SnakeBar(100, {
