@@ -489,88 +489,66 @@ function animateSnakeBar() {
     // Clear the terminal for full screen experience
     terminal.innerHTML = '';
 
-    // Measure actual available space
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.visibility = 'hidden';
-    tempDiv.style.fontFamily = "'Courier New', Courier, monospace";
-    tempDiv.style.fontSize = "max(16px, min(3vw, 20px))";
-    tempDiv.style.whiteSpace = 'pre';
-    tempDiv.style.lineHeight = '1.0';
-    tempDiv.style.WebkitTextSizeAdjust = 'none';
-    // Test with 10 characters to get more accurate width
-    tempDiv.textContent = '██████████';
-    document.body.appendChild(tempDiv);
-
-    const charWidth = tempDiv.offsetWidth / 10; // Average width per character
-    tempDiv.textContent = '█';
-    const charHeight = tempDiv.offsetHeight;
-    document.body.removeChild(tempDiv);
-
-    // Calculate actual character grid that fits on screen
-    // Use clientWidth for more accurate measurement, especially on mobile
+    // Calculate canvas size
     const viewportWidth = Math.min(window.innerWidth, document.documentElement.clientWidth);
     const viewportHeight = Math.min(window.innerHeight, document.documentElement.clientHeight);
 
-    const availableWidth = viewportWidth - 50; // Account for padding + safety margin
-    const availableHeight = viewportHeight - 100; // Account for padding, header, and progress text
+    const cellSize = 8; // pixels per cell
+    const cols = Math.floor((viewportWidth - 40) / cellSize);
+    const rows = Math.floor((viewportHeight - 100) / cellSize);
 
-    // Be more conservative - subtract 2 characters worth of width for safety
-    const terminalWidth = Math.max(10, Math.floor(availableWidth / charWidth) - 2);
-    const terminalHeight = Math.max(8, Math.floor(availableHeight / charHeight));
+    // Create container
+    const container = document.createElement('div');
+    container.className = 'output';
+    container.style.textAlign = 'left';
 
-    const output = document.createElement('pre'); // Use <pre> instead of div
-    output.className = 'output';
-    output.style.whiteSpace = 'pre';
+    // Progress text
+    const progressText = document.createElement('div');
+    progressText.style.color = '#33ff33';
+    progressText.style.fontFamily = "'Courier New', Courier, monospace";
+    progressText.style.marginBottom = '10px';
+    progressText.textContent = 'SnakeBar Progress: 0% [v6 - canvas]';
+    container.appendChild(progressText);
 
-    // Force exact square cells to prevent mobile drift
-    const computedFontSize = parseInt(getComputedStyle(document.body).fontSize);
-    output.style.fontSize = computedFontSize + 'px';
-    output.style.lineHeight = computedFontSize + 'px'; // MUST match font-size
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = cols * cellSize;
+    canvas.height = rows * cellSize;
+    canvas.style.display = 'block';
+    canvas.style.imageRendering = 'pixelated';
+    container.appendChild(canvas);
+    terminal.appendChild(container);
 
-    output.style.fontFamily = '"Courier New", Courier, monospace'; // Reliable monospace
-    output.style.letterSpacing = '0';
-    output.style.wordSpacing = '0';
-
-    output.style.overflowX = 'auto'; // Allow horizontal scroll instead of wrapping
-    output.style.overflowY = 'hidden';
-    output.style.WebkitTextSizeAdjust = 'none'; // Prevent iOS text scaling
-    output.style.textSizeAdjust = 'none';
-    output.style.margin = '0';
-    output.style.padding = '0';
-    terminal.appendChild(output);
+    const ctx = canvas.getContext('2d');
 
     const bar = new SnakeBar(100, {
-        width: terminalWidth,
-        height: terminalHeight,
+        width: cols,
+        height: rows,
         ch: '█',
-        bg: '\u00A0', // Use non-breaking space to prevent trimming
+        bg: ' ',
         seed: Math.floor(Math.random() * 10000)
     });
-
-    // Lock width using ch units - prevents wrapping/compression on mobile
-    output.style.width = bar.canvasWidth + 'ch';
-    output.style.maxWidth = bar.canvasWidth + 'ch';
-    output.style.minWidth = bar.canvasWidth + 'ch';
 
     let progress = 0;
     const interval = setInterval(() => {
         progress += 1;
         bar.update(1);
 
-        const rendered = bar.render();
-        const percentage = bar.getPercentage();
+        // Clear canvas
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Check if any line exceeds expected width
-        const lines = rendered.split('\n');
-        const maxLineLength = Math.max(...lines.map(l => l.length));
-
-        output.textContent = `SnakeBar Progress: ${percentage}% [v5 - ch units]\n\n${rendered}`;
-
-        // Log if we detect width issues
-        if (maxLineLength > terminalWidth) {
-            console.log(`WARNING: Line length ${maxLineLength} exceeds terminalWidth ${terminalWidth}`);
+        // Draw snake
+        ctx.fillStyle = '#33ff33';
+        for (let y = 0; y < bar.canvas.length; y++) {
+            for (let x = 0; x < bar.canvas[y].length; x++) {
+                if (bar.canvas[y][x] === '█') {
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
+            }
         }
+
+        progressText.textContent = `SnakeBar Progress: ${bar.getPercentage()}% [v6 - canvas]`;
 
         if (progress >= 100) {
             clearInterval(interval);
