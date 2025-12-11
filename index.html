@@ -528,12 +528,13 @@ function animateSnakeBar() {
     output.style.fontSize = computedFontSize + 'px';
     output.style.lineHeight = computedFontSize + 'px'; // MUST match font-size
 
-    output.style.fontFamily = "Menlo, Consolas, 'Courier New', monospace"; // Better monospace fonts
-    output.style.letterSpacing = '0px';
-    output.style.wordSpacing = '0px';
-    output.style.overflowX = 'hidden';
+    output.style.fontFamily = '"Courier New", Courier, monospace'; // Reliable monospace
+    output.style.letterSpacing = '0';
+    output.style.wordSpacing = '0';
+
+    output.style.overflowX = 'auto'; // Allow horizontal scroll instead of wrapping
     output.style.overflowY = 'hidden';
-    output.style.WebkitTextSizeAdjust = 'none'; // Prevent mobile text scaling
+    output.style.WebkitTextSizeAdjust = 'none'; // Prevent iOS text scaling
     output.style.textSizeAdjust = 'none';
     output.style.margin = '0';
     output.style.padding = '0';
@@ -547,9 +548,10 @@ function animateSnakeBar() {
         seed: Math.floor(Math.random() * 10000)
     });
 
-    // Set explicit width to prevent wrapping
-    output.style.width = (terminalWidth * charWidth) + 'px';
-    output.style.minWidth = output.style.width;
+    // Lock width using ch units - prevents wrapping/compression on mobile
+    output.style.width = bar.canvasWidth + 'ch';
+    output.style.maxWidth = bar.canvasWidth + 'ch';
+    output.style.minWidth = bar.canvasWidth + 'ch';
 
     let progress = 0;
     const interval = setInterval(() => {
@@ -563,7 +565,7 @@ function animateSnakeBar() {
         const lines = rendered.split('\n');
         const maxLineLength = Math.max(...lines.map(l => l.length));
 
-        output.textContent = `SnakeBar Progress: ${percentage}% [v4 - square cells fix]\n\n${rendered}`;
+        output.textContent = `SnakeBar Progress: ${percentage}% [v5 - ch units]\n\n${rendered}`;
 
         // Log if we detect width issues
         if (maxLineLength > terminalWidth) {
