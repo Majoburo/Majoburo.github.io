@@ -525,33 +525,15 @@ function animateSnakeBar() {
     output.style.lineHeight = '1.0';
     output.style.overflowX = 'hidden';
     output.style.overflowY = 'hidden';
-    output.style.width = 'fit-content';
-    output.style.maxWidth = '100vw';
-    output.style.boxSizing = 'border-box';
-    output.style.transformOrigin = 'top left';
+    output.style.fontFamily = "'Courier New', Courier, monospace";
+    output.style.fontSize = getComputedStyle(document.body).fontSize; // Use exact computed size
+    output.style.letterSpacing = 'normal';
+    output.style.wordSpacing = 'normal';
+    output.style.WebkitTextSizeAdjust = '100%';
+    output.style.textSizeAdjust = '100%';
+    output.style.margin = '0';
+    output.style.padding = '0';
     terminal.appendChild(output);
-
-    // Create initial bar to measure actual rendered width
-    const testBar = new SnakeBar(1, {
-        width: terminalWidth,
-        height: 1,
-        ch: '█',
-        bg: ' '
-    });
-    output.textContent = testBar.render();
-
-    // Measure actual width and scale down if needed
-    const actualWidth = output.scrollWidth;
-    const maxWidth = viewportWidth - 40;
-
-    if (actualWidth > maxWidth) {
-        const scale = maxWidth / actualWidth;
-        output.style.transform = `scale(${scale})`;
-        output.style.transformOrigin = 'top left';
-    }
-
-    // Clear test content
-    output.textContent = '';
 
     const bar = new SnakeBar(100, {
         width: terminalWidth,
