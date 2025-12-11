@@ -517,6 +517,7 @@ function animateSnakeBar() {
     const container = document.createElement('div');
     container.className = 'output';
     container.style.textAlign = 'left';
+    container.style.marginLeft = '0'; // Override .output margin to align with prompt
 
     // Progress text
     const progressText = document.createElement('div');
