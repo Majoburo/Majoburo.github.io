@@ -14,7 +14,10 @@ body {
     margin: 0;
     padding: 20px;
     overflow-y: auto;
+    overflow-x: hidden;
     height: 100vh;
+    max-width: 100vw;
+    box-sizing: border-box;
     -webkit-text-size-adjust: none;
 }
 
@@ -506,7 +509,8 @@ function animateSnakeBar() {
     const viewportWidth = Math.min(window.innerWidth, document.documentElement.clientWidth);
     const viewportHeight = Math.min(window.innerHeight, document.documentElement.clientHeight);
 
-    const cols = Math.floor((viewportWidth - 40) / cellSize);
+    // Account for: 20px body padding left + 20px body padding right + 20px canvas margin left + 20px canvas margin right
+    const cols = Math.floor((viewportWidth - 80) / cellSize);
     const rows = Math.floor((viewportHeight - 100) / cellSize);
 
     // Create container
@@ -520,7 +524,7 @@ function animateSnakeBar() {
     progressText.style.fontFamily = "'Courier New', Courier, monospace";
     progressText.style.fontSize = 'max(16px, min(3vw, 20px))';
     progressText.style.marginBottom = '10px';
-    progressText.style.padding = '10px 0';
+    progressText.style.marginLeft = '20px'; // Match body padding
     progressText.textContent = 'SnakeBar Progress: 0%';
     container.appendChild(progressText);
 
@@ -530,6 +534,8 @@ function animateSnakeBar() {
     canvas.height = rows * cellSize;
     canvas.style.display = 'block';
     canvas.style.imageRendering = 'pixelated';
+    canvas.style.marginLeft = '20px'; // Match body padding
+    canvas.style.marginRight = '20px'; // Match body padding
     container.appendChild(canvas);
     terminal.appendChild(container);
 
