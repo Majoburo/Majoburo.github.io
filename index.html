@@ -70,13 +70,248 @@ body {
 <div id="terminal"></div>
 
 <script>
+// ========== SNAKEBAR IMPLEMENTATION ==========
+// Port of snakebar.py - space-filling curve progress bar
+
+class Random {
+    constructor(seed = null) {
+        this.seed = seed !== null ? seed : Math.floor(Math.random() * 1000000);
+        this.state = this.seed;
+    }
+
+    next() {
+        // Simple LCG random number generator
+        this.state = (this.state * 1664525 + 1013904223) % 4294967296;
+        return this.state / 4294967296;
+    }
+
+    randrange(n) {
+        return Math.floor(this.next() * n);
+    }
+
+    shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(this.next() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+}
+
+function gridSpanningTree(ncols, nrows, seed = null) {
+    const rng = new Random(seed);
+    const N = ncols * nrows;
+    const visited = new Array(N).fill(false);
+    const edges = [];
+
+    const row = (i) => Math.floor(i / ncols);
+    const col = (i) => i % ncols;
+
+    function neighbors(k) {
+        const i = col(k), j = row(k);
+        const ns = [];
+        if (i > 0) ns.push(k - 1);           // left
+        if (j > 0) ns.push(k - ncols);       // up
+        if (i + 1 < ncols) ns.push(k + 1);   // right
+        if (j + 1 < nrows) ns.push(k + ncols); // down
+        return rng.shuffle(ns);
+    }
+
+    function visit(k) {
+        visited[k] = true;
+        for (const n of neighbors(k)) {
+            if (!visited[n]) {
+                edges.push([k, n]);
+                visit(n);
+            }
+        }
+    }
+
+    visit(rng.randrange(N));
+
+    const connect = Array(N).fill(null).map(() => ({left: false, right: false, up: false, down: false}));
+    for (const [a, b] of edges) {
+        const [i, j] = a <= b ? [a, b] : [b, a];
+        if (row(i) === row(j)) {
+            connect[i].right = true;
+            connect[j].left = true;
+        } else {
+            connect[i].down = true;
+            connect[j].up = true;
+        }
+    }
+
+    return {nrows, ncols, edges, connect};
+}
+
+function hamiltonianFromSpanningTree(st) {
+    const nrows2 = 2 * st.nrows;
+    const ncols2 = 2 * st.ncols;
+    const N2 = nrows2 * ncols2;
+    const edges2 = [];
+
+    const row = (i) => Math.floor(i / st.ncols);
+    const col = (i) => i % st.ncols;
+    const index2 = (i, dcol, drow) => (row(i) * 2 + drow) * ncols2 + (col(i) * 2 + dcol);
+
+    for (let i = 0; i < st.connect.length; i++) {
+        const cell = st.connect[i];
+
+        if (cell.right) {
+            edges2.push([index2(i, 1, 0), index2(i, 2, 0)]);
+            edges2.push([index2(i, 1, 1), index2(i, 2, 1)]);
+        } else {
+            edges2.push([index2(i, 1, 0), index2(i, 1, 1)]);
+        }
+
+        if (!cell.left) {
+            edges2.push([index2(i, 0, 0), index2(i, 0, 1)]);
+        }
+
+        if (cell.down) {
+            edges2.push([index2(i, 0, 1), index2(i, 0, 2)]);
+            edges2.push([index2(i, 1, 1), index2(i, 1, 2)]);
+        } else {
+            edges2.push([index2(i, 0, 1), index2(i, 1, 1)]);
+        }
+
+        if (!cell.up) {
+            edges2.push([index2(i, 0, 0), index2(i, 1, 0)]);
+        }
+    }
+
+    const links = Array(N2).fill(null).map(() => []);
+    for (const [a, b] of edges2) {
+        links[a].push(b);
+        links[b].push(a);
+    }
+
+    const visited = new Array(N2).fill(false);
+    let j = 0;
+    const path = [];
+    for (let _ = 0; _ < edges2.length; _++) {
+        path.push(j);
+        visited[j] = true;
+        const [a, b] = links[j];
+        j = visited[a] ? b : a;
+    }
+
+    return {nrows: nrows2, ncols: ncols2, path};
+}
+
+function computeDrawSequence(ham) {
+    const order = [];
+    const ncols = ham.ncols;
+    const rc = (idx) => [Math.floor(idx / ncols), idx % ncols];
+
+    order.push({kind: 'center', val: rc(ham.path[0])});
+
+    for (let k = 0; k < ham.path.length - 1; k++) {
+        const a = ham.path[k], b = ham.path[k + 1];
+        const [r0, c0] = rc(a);
+        const [r1, c1] = rc(b);
+
+        let y, x;
+        if (r0 !== r1) {
+            y = Math.floor((2 * r0 + 2 * r1) / 2);
+            x = 2 * c0;
+        } else {
+            y = 2 * r0;
+            x = Math.floor((2 * c0 + 2 * c1) / 2);
+        }
+        order.push({kind: 'edge', val: [y, x]});
+        order.push({kind: 'center', val: [r1, c1]});
+    }
+
+    const drawSeq = [];
+    for (const {kind, val} of order) {
+        if (kind === 'center') {
+            const [r, c] = val;
+            drawSeq.push([2 * r, 2 * c]);
+        } else {
+            drawSeq.push(val);
+        }
+    }
+    return drawSeq;
+}
+
+class SnakeBar {
+    constructor(total, options = {}) {
+        this.total = Math.max(1, total);
+        this.ch = options.ch || '█';
+        this.bg = options.bg || ' ';
+        this.seed = options.seed || null;
+        this.desc = options.desc || '';
+        this.colors = options.colors || ['#33ff33'];
+
+        // Desired canvas size in characters
+        const W = options.width || 60;
+        const H = options.height || 20;
+
+        // Choose spanning-tree size to fit interleaved canvas
+        // Final canvas will be (4*st_nrows - 1) x (4*st_ncols - 1)
+        // Because: ham is 2x spanning tree, then interleaved is 2x-1 of ham
+        const stNrows = Math.max(1, Math.floor((H + 1) / 4));
+        const stNcols = Math.max(1, Math.floor((W + 1) / 4));
+
+        const st = gridSpanningTree(stNcols, stNrows, this.seed);
+        this.ham = hamiltonianFromSpanningTree(st);
+
+        const nrows = this.ham.nrows;
+        const ncols = this.ham.ncols;
+        this.nrows = nrows;
+        this.ncols = ncols;
+
+        // Build interleaved canvas: 2*nrows - 1 by 2*ncols - 1
+        this.canvasHeight = 2 * nrows - 1;
+        this.canvasWidth = 2 * ncols - 1;
+        this.canvas = Array(this.canvasHeight).fill(null).map(() => Array(this.canvasWidth).fill(this.bg));
+
+        this.drawSeq = computeDrawSequence(this.ham);
+        this.drawnUpto = -1;
+        this.progress = 0;
+    }
+
+    update(n = 1) {
+        this.progress = Math.min(this.total, this.progress + n);
+        const totalPts = this.drawSeq.length;
+
+        let targetUpto;
+        if (this.progress >= this.total) {
+            targetUpto = totalPts - 1;
+        } else {
+            const frac = this.progress / this.total;
+            targetUpto = Math.floor(frac * (totalPts - 1));
+        }
+
+        for (let k = this.drawnUpto + 1; k <= targetUpto; k++) {
+            const [y, x] = this.drawSeq[k];
+            if (y >= 0 && y < this.canvasHeight && x >= 0 && x < this.canvasWidth) {
+                this.canvas[y][x] = this.ch;
+            }
+        }
+
+        this.drawnUpto = targetUpto;
+    }
+
+    render() {
+        return this.canvas.map(row => row.join('')).join('\n');
+    }
+
+    getPercentage() {
+        return Math.floor((this.progress / this.total) * 100);
+    }
+}
+
+// ========== END SNAKEBAR IMPLEMENTATION ==========
+
 const sections = {
     'home': "Welcome to my homepage!<br>I'm an EMIT Postdoctoral Fellow at Fisk and Vanderbilt Universities.<br>My research focuses on gravitational waves, extreme mass ratio inspirals (EMRIs),<br>and multi-messenger astronomy.<br><br>Type 'ls' to see available sections or 'help' for commands.",
     'publications': "Publications:<br>Full list available at my <a href='https://orcid.org/0000-0003-0416-9818' target='_blank'>ORCID profile</a><br><br>Selected publications:<br>- <a href='https://ui.adsabs.harvard.edu/abs/2023MNRAS.526.1471F' target='_blank'>Fouvry et al. - Constraining IMBHs from stellar disc of SgrA* (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2023MNRAS.525.4121J' target='_blank'>Johnson, Coughlin et al. - Multimessenger parameter inference of WD binaries (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2023ApJ...954..102B' target='_blank'>The LIGO HET Response (LIGHETR) Project (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2022PhRvD.105d4005B' target='_blank'>Gravitational Wave Timing Array (2022)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2021ApJ...921..107B' target='_blank'>Dark Matter and Central Black Hole Mass in Leo I (2021)</a><br>- LIGO/Virgo Collaboration: GWTC-1, GWTC-2, GW190425<br><br>Download my <a href='cv.pdf' target='_blank'>full CV (PDF)</a>",
     'research': "Research:<br>- Extreme Mass Ratio Inspirals (EMRIs) & LISA data analysis<br>- Multi-messenger astronomy (GW + EM counterparts)<br>- Black hole dynamics and stellar kinematics<br>- Supernova observations with JWST<br><br>Current projects:<br>- PI: NASA LISA Preparatory Science - EM-driven GW searches for EMRIs<br>- PI: JWST Cycle 3 - Scarlet deblender for IFU data<br>- Co-I: JWST GO Program 3805<br><br>Collaborations:<br>- LISA Consortium (2021-present)<br>- Young Supernova Experiment (2021-2023)<br>- LIGO/Virgo (2018-2021)",
     'teaching': "Teaching & Mentoring:<br><br>Current:<br>- Co-Director: IDEA Summer Scholars Program (Fisk-Vanderbilt, 2024-present)<br>  Bridge program for HBCU undergraduates in astrophysics & data science<br><br>University of Texas at Austin (2014-2021):<br>- TA: General Relativity<br>- AI: Physical Science 303 (Instructor of record)<br>- TA: Popular Astronomy<br>- TA: General Physics I<br><br>PUCP Peru (2011-2012):<br>- TA: Cosmology<br>- TA: Introduction to Research<br><br>Mentored 6+ undergraduate students and 1 graduate student",
     'contact': "Contact:<br>Email: bustamante [dot] rosell [at] vanderbilt [dot] edu<br>ORCID: <a href='https://orcid.org/0000-0003-0416-9818' target='_blank'>0000-0003-0416-9818</a><br>GitHub: <a href='https://github.com/majoburo' target='_blank'>github.com/majoburo</a><br><br>Office: Fisk University, Nashville, TN",
-    'other': "Other Projects:<br>- <a href='https://github.com/majoburo/snakebar.jl' target='_blank'>snakebar.jl</a> - Julia implementation<br>- <a href='https://github.com/majoburo/snakebar.py' target='_blank'>snakebar.py</a> - Python implementation<br>- <a href='/cmd/' target='_blank'>HR Diagram visualization</a><br><br>Outreach:<br>- Founder & Director: Fisk-Vanderbilt IDEA Summer Scholars (2023-present)<br>- Astronomy on Tap talks (Austin, 2017-2020)<br>- Public lectures on black holes and gravitational waves"
+    'other': "Other Projects:<br>- <a href='https://github.com/majoburo/snakebar.jl' target='_blank'>snakebar.jl</a> - Julia implementation<br>- <a href='https://github.com/majoburo/snakebar' target='_blank'>snakebar.py</a> - Python implementation<br>- Try '${makeClickable('snakebar', 'snakebar')}' in this terminal to see it in action!<br>- <a href='/cmd/' target='_blank'>HR Diagram visualization</a><br><br>Outreach:<br>- Founder & Director: Fisk-Vanderbilt IDEA Summer Scholars (2023-present)<br>- Astronomy on Tap talks (Austin, 2017-2020)<br>- Public lectures on black holes and gravitational waves"
 };
 
 const terminal = document.getElementById('terminal');
@@ -250,6 +485,66 @@ function animateTrain() {
     }, 50);
 }
 
+function animateSnakeBar() {
+    // Clear the terminal for full screen experience
+    terminal.innerHTML = '';
+
+    // Measure actual available space
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.fontFamily = "'Courier New', Courier, monospace";
+    tempDiv.style.fontSize = "max(16px, min(3vw, 20px))";
+    tempDiv.style.whiteSpace = 'pre';
+    tempDiv.textContent = 'X';
+    document.body.appendChild(tempDiv);
+
+    const charWidth = tempDiv.offsetWidth;
+    const charHeight = tempDiv.offsetHeight;
+    document.body.removeChild(tempDiv);
+
+    // Calculate actual character grid that fits on screen
+    const availableWidth = window.innerWidth - 40; // Account for padding
+    const availableHeight = window.innerHeight - 100; // Account for padding and header
+    const terminalWidth = Math.floor(availableWidth / charWidth);
+    const terminalHeight = Math.floor(availableHeight / charHeight);
+
+    const output = document.createElement('div');
+    output.className = 'output';
+    output.style.whiteSpace = 'pre';
+    output.style.lineHeight = '1.0';
+    terminal.appendChild(output);
+
+    const bar = new SnakeBar(100, {
+        width: terminalWidth,
+        height: terminalHeight,
+        ch: '█',
+        bg: ' ',
+        seed: Math.floor(Math.random() * 10000)
+    });
+
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 1;
+        bar.update(1);
+
+        const rendered = bar.render();
+        const percentage = bar.getPercentage();
+        output.textContent = `SnakeBar Progress: ${percentage}%\n\n${rendered}`;
+
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+                const msg = document.createElement('div');
+                msg.className = 'output';
+                msg.innerHTML = "\nLike this? Install snakebar:\n\nPython:\n  pip install snakebar\n\nJulia:\n  pkg> add SnakeBar\n\nRepos:\n  - <a href='https://github.com/majoburo/snakebar' target='_blank'>Python version</a>\n  - <a href='https://github.com/majoburo/snakebar.jl' target='_blank'>Julia version</a>";
+                terminal.appendChild(msg);
+                createPrompt();
+            }, 500);
+        }
+    }, 30);
+}
+
 function runBuiltinCommand(cmd) {
     const cmdLower = cmd.toLowerCase();
 
@@ -312,7 +607,7 @@ function runBuiltinCommand(cmd) {
         animateTrain();
         return null; // null signals not to create a new prompt
     }
-    else if(cmdLower === 'help') return `This is a terminal-style interface. Type commands and press Enter.\n\nBasic commands:\n  ${makeClickable('ls', 'ls')}                List all sections\n  ${makeClickable('publications', 'publications')}      View publications\n  ${makeClickable('research', 'research')}          View research\n  ${makeClickable('teaching', 'teaching')}          View teaching\n  ${makeClickable('contact', 'contact')}           View contact info\n  ${makeClickable('other', 'other')}             View other projects\n  ${makeClickable('cat', 'cat')} &lt;section&gt;     Alternative syntax (e.g., 'cat research')\n  ${makeClickable('clear', 'clear')}             Clear screen\n  ${makeClickable('exit', 'exit')}              Close this tab\n\nQuick actions:\n  ${makeClickable('mail', 'mail')}              Email Majo\n  ${makeClickable('cv', 'cv')}                Download CV\n  ${makeClickable('links', 'links')}             Show all contact links\n\nFun:\n  ${makeClickable('bh', 'bh')}                Interactive black hole adventure!\n\nTips:\n  • Commands are case-insensitive\n  • Use Tab for auto-completion\n  • Use ↑/↓ arrows for command history\n  • Try other common Unix commands for surprises!`;
+    else if(cmdLower === 'help') return `This is a terminal-style interface. Type commands and press Enter.\n\nBasic commands:\n  ${makeClickable('ls', 'ls')}                List all sections\n  ${makeClickable('publications', 'publications')}      View publications\n  ${makeClickable('research', 'research')}          View research\n  ${makeClickable('teaching', 'teaching')}          View teaching\n  ${makeClickable('contact', 'contact')}           View contact info\n  ${makeClickable('other', 'other')}             View other projects\n  ${makeClickable('cat', 'cat')} &lt;section&gt;     Alternative syntax (e.g., 'cat research')\n  ${makeClickable('clear', 'clear')}             Clear screen\n  ${makeClickable('exit', 'exit')}              Close this tab\n\nQuick actions:\n  ${makeClickable('mail', 'mail')}              Email Majo\n  ${makeClickable('cv', 'cv')}                Download CV\n  ${makeClickable('links', 'links')}             Show all contact links\n\nFun:\n  ${makeClickable('bh', 'bh')}                Interactive black hole adventure!\n  ${makeClickable('snakebar', 'snakebar')}          Space-filling curve loading animation\n\nTips:\n  • Commands are case-insensitive\n  • Use Tab for auto-completion\n  • Use ↑/↓ arrows for command history\n  • Try other common Unix commands for surprises!`;
     else if(cmdLower === 'cat') {
         return "cat: missing operand\nTry 'cat &lt;section&gt;' or just type the section name.";
     } else if(cmdLower.startsWith('cat ')) {
@@ -361,6 +656,9 @@ function runBuiltinCommand(cmd) {
         createPrompt();
         setTimeout(updateChoiceHighlight, 0);
         return null; // Don't create another prompt
+    } else if(cmdLower === 'snakebar' || cmdLower === 'snake') {
+        animateSnakeBar();
+        return null; // Don't create a new prompt - animateSnakeBar handles it
     } else if(cmdLower === 'cd' || cmdLower.startsWith('cd ')) {
         const args = cmd.trim().split(/\s+/);
         if(args.length === 1) {
@@ -461,7 +759,7 @@ function createPrompt(prefill='') {
                 }
             } else {
                 // Completing the command itself
-                const allCommands = ['ls', 'help', 'clear', 'cat', 'exit', 'mail', 'cv', 'links', 'about', ...Object.keys(sections)];
+                const allCommands = ['ls', 'help', 'clear', 'cat', 'exit', 'mail', 'cv', 'links', 'about', 'snakebar', 'bh', ...Object.keys(sections)];
                 const matches = allCommands.filter(cmd => cmd.startsWith(currentText.toLowerCase()));
 
                 if(matches.length === 1) {
