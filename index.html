@@ -519,10 +519,10 @@ function animateSnakeBar() {
     const terminalWidth = Math.max(10, Math.floor(availableWidth / charWidth) - 2);
     const terminalHeight = Math.max(8, Math.floor(availableHeight / charHeight));
 
-    const output = document.createElement('div');
+    const output = document.createElement('pre'); // Use <pre> instead of div
     output.className = 'output';
     output.style.whiteSpace = 'pre';
-    output.style.lineHeight = '0.85'; // Tighter line-height to eliminate gaps on mobile
+    output.style.lineHeight = '1.0';
     output.style.overflowX = 'hidden';
     output.style.overflowY = 'hidden';
     output.style.fontFamily = "'Courier New', Courier, monospace";
@@ -539,7 +539,7 @@ function animateSnakeBar() {
         width: terminalWidth,
         height: terminalHeight,
         ch: '█',
-        bg: ' ',
+        bg: '\u00A0', // Use non-breaking space to prevent trimming
         seed: Math.floor(Math.random() * 10000)
     });
 
