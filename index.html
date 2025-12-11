@@ -559,7 +559,7 @@ function animateSnakeBar() {
         const lines = rendered.split('\n');
         const maxLineLength = Math.max(...lines.map(l => l.length));
 
-        output.textContent = `SnakeBar Progress: ${percentage}%\n\n${rendered}`;
+        output.textContent = `SnakeBar Progress: ${percentage}% [v3 - non-breaking space]\n\n${rendered}`;
 
         // Log if we detect width issues
         if (maxLineLength > terminalWidth) {
