@@ -518,8 +518,10 @@ function animateSnakeBar() {
     const progressText = document.createElement('div');
     progressText.style.color = '#33ff33';
     progressText.style.fontFamily = "'Courier New', Courier, monospace";
+    progressText.style.fontSize = 'max(16px, min(3vw, 20px))';
     progressText.style.marginBottom = '10px';
-    progressText.textContent = 'SnakeBar Progress: 0% [v6 - canvas]';
+    progressText.style.padding = '10px 0';
+    progressText.textContent = 'SnakeBar Progress: 0%';
     container.appendChild(progressText);
 
     // Create canvas
@@ -560,7 +562,7 @@ function animateSnakeBar() {
             }
         }
 
-        progressText.textContent = `SnakeBar Progress: ${bar.getPercentage()}% [v6 - canvas]`;
+        progressText.textContent = `SnakeBar Progress: ${bar.getPercentage()}%`;
 
         if (progress >= 100) {
             clearInterval(interval);
