@@ -522,13 +522,13 @@ function animateSnakeBar() {
     const output = document.createElement('div');
     output.className = 'output';
     output.style.whiteSpace = 'pre';
-    output.style.lineHeight = '1.0';
+    output.style.lineHeight = '0.85'; // Tighter line-height to eliminate gaps on mobile
     output.style.overflowX = 'hidden';
     output.style.overflowY = 'hidden';
     output.style.fontFamily = "'Courier New', Courier, monospace";
     output.style.fontSize = getComputedStyle(document.body).fontSize; // Use exact computed size
-    output.style.letterSpacing = 'normal';
-    output.style.wordSpacing = 'normal';
+    output.style.letterSpacing = '0';
+    output.style.wordSpacing = '0';
     output.style.WebkitTextSizeAdjust = '100%';
     output.style.textSizeAdjust = '100%';
     output.style.margin = '0';
