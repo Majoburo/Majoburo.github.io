@@ -308,12 +308,134 @@ class SnakeBar {
 
 // ========== END SNAKEBAR IMPLEMENTATION ==========
 
+// ========== ART GALLERY ==========
+const artImages = [
+    "art/11414449_10155711350930055_900941480_n.jpg",
+    "art/2015-07-19 16.49.19.png",
+    "art/2016-03-20 17.23.26.png",
+    "art/2016-04-14 15.06.41.jpg",
+    "art/20160822_001349.png",
+    "art/2A338F06-1095-4EB5-9C2D-CC1C08769803.jpg",
+    "art/IMG-20181206-WA0003.jpg",
+    "art/IMG_0008.jpg",
+    "art/IMG_0051.png",
+    "art/IMG_0053.png",
+    "art/IMG_20141220_180028~2.jpg",
+    "art/IMG_20141228_111025.jpg",
+    "art/IMG_20141228_191112~2.jpg",
+    "art/IMG_20150727_114356.jpg",
+    "art/IMG_20150909_143129.jpg",
+    "art/IMG_20160727_212320.png",
+    "art/IMG_20191122_032123691.png",
+    "art/IMG_20191201_214148.jpg",
+    "art/IMG_20200408_122708041.png",
+    "art/IMG_20200408_122740525.png",
+    "art/gone_fishing.jpg"
+];
+
+let galleryActive = false;
+let galleryIndex = 0;
+let galleryContainer = null;
+let galleryCanvas = null;
+let galleryLabel = null;
+let galleryKeyHandler = null;
+let galleryTouchStartX = 0;
+
+function showGalleryImage(idx) {
+    galleryIndex = ((idx % artImages.length) + artImages.length) % artImages.length;
+    const src = artImages[galleryIndex];
+    const label = src.replace('art/', '');
+    galleryLabel.textContent = `[ ${galleryIndex + 1} / ${artImages.length} ]  ${label}   (← → to navigate, q to exit)`;
+
+    const img = new Image();
+    img.onload = function() {
+        const ctx = galleryCanvas.getContext('2d');
+        const cw = galleryCanvas.width;
+        const ch = galleryCanvas.height;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, cw, ch);
+
+        // Draw green border
+        ctx.strokeStyle = '#33ff33';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, cw, ch);
+
+        // Fit image with padding
+        const pad = 20;
+        const maxW = cw - pad * 2;
+        const maxH = ch - pad * 2;
+        const scale = Math.min(maxW / img.width, maxH / img.height);
+        const dw = Math.round(img.width * scale);
+        const dh = Math.round(img.height * scale);
+        const dx = Math.round((cw - dw) / 2);
+        const dy = Math.round((ch - dh) / 2);
+        ctx.drawImage(img, dx, dy, dw, dh);
+    };
+    img.src = src;
+}
+
+function openGallery() {
+    galleryActive = true;
+    terminal.innerHTML = '';
+
+    galleryContainer = document.createElement('div');
+    galleryContainer.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0;';
+
+    galleryLabel = document.createElement('div');
+    galleryLabel.style.cssText = 'color:#33ff33;font-family:"Courier New",monospace;font-size:max(12px,min(2vw,16px));opacity:0.7;text-align:center;';
+
+    galleryCanvas = document.createElement('canvas');
+    const vw = Math.min(window.innerWidth, document.documentElement.clientWidth) - 40;
+    const vh = window.innerHeight - 80;
+    galleryCanvas.width = vw;
+    galleryCanvas.height = vh;
+    galleryCanvas.style.cssText = 'display:block;cursor:pointer;';
+    galleryCanvas.title = 'Click to advance';
+
+    galleryCanvas.addEventListener('click', () => showGalleryImage(galleryIndex + 1));
+
+    // Touch swipe
+    galleryCanvas.addEventListener('touchstart', (e) => { galleryTouchStartX = e.touches[0].clientX; }, {passive:true});
+    galleryCanvas.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - galleryTouchStartX;
+        if (Math.abs(dx) > 30) showGalleryImage(galleryIndex + (dx < 0 ? 1 : -1));
+    }, {passive:true});
+
+    galleryContainer.appendChild(galleryLabel);
+    galleryContainer.appendChild(galleryCanvas);
+    terminal.appendChild(galleryContainer);
+
+    galleryKeyHandler = function(e) {
+        if (!galleryActive) return;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); showGalleryImage(galleryIndex + 1); }
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); showGalleryImage(galleryIndex - 1); }
+        else if (e.key === 'q' || e.key === 'Q' || e.key === 'Escape') { closeGallery(); }
+    };
+    document.addEventListener('keydown', galleryKeyHandler);
+
+    showGalleryImage(0);
+}
+
+function closeGallery() {
+    galleryActive = false;
+    document.removeEventListener('keydown', galleryKeyHandler);
+    galleryKeyHandler = null;
+    terminal.innerHTML = '';
+    const msg = document.createElement('div');
+    msg.className = 'output';
+    msg.textContent = 'Gallery closed.';
+    terminal.appendChild(msg);
+    createPrompt();
+}
+// ========== END ART GALLERY ==========
+
 const sections = {
     'home': "Welcome to my homepage!<br>I'm an EMIT Postdoctoral Fellow at Fisk and Vanderbilt Universities.<br>My research focuses on gravitational waves, extreme mass ratio inspirals (EMRIs),<br>and multi-messenger astronomy.<br><br>Type 'ls' to see available sections or 'help' for commands.",
     'publications': "Publications:<br>Full list available at my <a href='https://orcid.org/0000-0003-0416-9818' target='_blank'>ORCID profile</a><br><br>Selected publications:<br>- <a href='https://ui.adsabs.harvard.edu/abs/2023MNRAS.526.1471F' target='_blank'>Fouvry et al. - Constraining IMBHs from stellar disc of SgrA* (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2023MNRAS.525.4121J' target='_blank'>Johnson, Coughlin et al. - Multimessenger parameter inference of WD binaries (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2023ApJ...954..102B' target='_blank'>The LIGO HET Response (LIGHETR) Project (2023)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2022PhRvD.105d4005B' target='_blank'>Gravitational Wave Timing Array (2022)</a><br>- <a href='https://ui.adsabs.harvard.edu/abs/2021ApJ...921..107B' target='_blank'>Dark Matter and Central Black Hole Mass in Leo I (2021)</a><br>- LIGO/Virgo Collaboration: GWTC-1, GWTC-2, GW190425<br><br>Download my <a href='cv.pdf' target='_blank'>full CV (PDF)</a>",
     'research': "Research:<br>- Extreme Mass Ratio Inspirals (EMRIs) & LISA data analysis<br>- Multi-messenger astronomy (GW + EM counterparts)<br>- Black hole dynamics and stellar kinematics<br>- Supernova observations with JWST<br><br>Current projects:<br>- PI: NASA LISA Preparatory Science - EM-driven GW searches for EMRIs<br>- PI: JWST Cycle 3 - Scarlet deblender for IFU data<br>- Co-I: JWST GO Program 3805<br><br>Collaborations:<br>- LISA Consortium (2021-present)<br>- Young Supernova Experiment (2021-2023)<br>- LIGO/Virgo (2018-2021)",
     'teaching': "Teaching & Mentoring:<br><br>Current:<br>- Co-Director: IDEA Summer Scholars Program (Fisk-Vanderbilt, 2024-present)<br>  Bridge program for HBCU undergraduates in astrophysics & data science<br><br>University of Texas at Austin (2014-2021):<br>- TA: General Relativity<br>- AI: Physical Science 303 (Instructor of record)<br>- TA: Popular Astronomy<br>- TA: General Physics I<br><br>PUCP Peru (2011-2012):<br>- TA: Cosmology<br>- TA: Introduction to Research<br><br>Mentored 6+ undergraduate students and 1 graduate student",
     'contact': "Contact:<br>Email: bustamante [dot] rosell [at] vanderbilt [dot] edu<br>ORCID: <a href='https://orcid.org/0000-0003-0416-9818' target='_blank'>0000-0003-0416-9818</a><br>GitHub: <a href='https://github.com/majoburo' target='_blank'>github.com/majoburo</a><br><br>Office: Fisk University, Nashville, TN",
+    'art': "art: use the 'art' command to open the gallery",
     'other': "Other Projects:<br>- <a href='https://github.com/majoburo/snakebar.jl' target='_blank'>snakebar.jl</a> - Julia implementation<br>- <a href='https://github.com/majoburo/snakebar' target='_blank'>snakebar.py</a> - Python implementation<br>- Try '${makeClickable('snakebar', 'snakebar')}' in this terminal to see it in action!<br>- <a href='/cmd/' target='_blank'>HR Diagram visualization</a><br><br>Outreach:<br>- Founder & Director: Fisk-Vanderbilt IDEA Summer Scholars (2023-present)<br>- Astronomy on Tap talks (Austin, 2017-2020)<br>- Public lectures on black holes and gravitational waves"
 };
 
@@ -638,12 +760,17 @@ function runBuiltinCommand(cmd) {
         }
     }
 
-    if(cmdLower === 'ls') return Object.keys(sections).join('  ');
+    if(cmdLower === 'art') {
+        openGallery();
+        return null;
+    }
+
+    if(cmdLower === 'ls') return Object.keys(sections).filter(k => k !== 'art').join('  ') + '  art';
     else if(cmdLower === 'sl') {
         animateTrain();
         return null; // null signals not to create a new prompt
     }
-    else if(cmdLower === 'help') return `This is a terminal-style interface. Type commands and press Enter.\n\nBasic commands:\n  ${makeClickable('ls', 'ls')}                List all sections\n  ${makeClickable('publications', 'publications')}      View publications\n  ${makeClickable('research', 'research')}          View research\n  ${makeClickable('teaching', 'teaching')}          View teaching\n  ${makeClickable('contact', 'contact')}           View contact info\n  ${makeClickable('other', 'other')}             View other projects\n  ${makeClickable('cat', 'cat')} &lt;section&gt;     Alternative syntax (e.g., 'cat research')\n  ${makeClickable('clear', 'clear')}             Clear screen\n  ${makeClickable('exit', 'exit')}              Close this tab\n\nQuick actions:\n  ${makeClickable('mail', 'mail')}              Email Majo\n  ${makeClickable('cv', 'cv')}                Download CV\n  ${makeClickable('links', 'links')}             Show all contact links\n\nFun:\n  ${makeClickable('bh', 'bh')}                Interactive black hole adventure!\n  ${makeClickable('snakebar', 'snakebar')}          Space-filling curve loading animation\n\nTips:\n  • Commands are case-insensitive\n  • Use Tab for auto-completion\n  • Use ↑/↓ arrows for command history\n  • Try other common Unix commands for surprises!`;
+    else if(cmdLower === 'help') return `This is a terminal-style interface. Type commands and press Enter.\n\nBasic commands:\n  ${makeClickable('ls', 'ls')}                List all sections\n  ${makeClickable('publications', 'publications')}      View publications\n  ${makeClickable('research', 'research')}          View research\n  ${makeClickable('teaching', 'teaching')}          View teaching\n  ${makeClickable('contact', 'contact')}           View contact info\n  ${makeClickable('other', 'other')}             View other projects\n  ${makeClickable('cat', 'cat')} &lt;section&gt;     Alternative syntax (e.g., 'cat research')\n  ${makeClickable('clear', 'clear')}             Clear screen\n  ${makeClickable('exit', 'exit')}              Close this tab\n\nQuick actions:\n  ${makeClickable('mail', 'mail')}              Email Majo\n  ${makeClickable('cv', 'cv')}                Download CV\n  ${makeClickable('links', 'links')}             Show all contact links\n\nFun:\n  ${makeClickable('bh', 'bh')}                Interactive black hole adventure!\n  ${makeClickable('snakebar', 'snakebar')}          Space-filling curve loading animation\n  ${makeClickable('art', 'art')}               Art gallery (← → to browse, q to exit)\n\nTips:\n  • Commands are case-insensitive\n  • Use Tab for auto-completion\n  • Use ↑/↓ arrows for command history\n  • Try other common Unix commands for surprises!`;
     else if(cmdLower === 'cat') {
         return "cat: missing operand\nTry 'cat &lt;section&gt;' or just type the section name.";
     } else if(cmdLower.startsWith('cat ')) {
@@ -795,7 +922,7 @@ function createPrompt(prefill='') {
                 }
             } else {
                 // Completing the command itself
-                const allCommands = ['ls', 'help', 'clear', 'cat', 'exit', 'mail', 'cv', 'links', 'about', 'snakebar', 'bh', ...Object.keys(sections)];
+                const allCommands = ['ls', 'help', 'clear', 'cat', 'exit', 'mail', 'cv', 'links', 'about', 'snakebar', 'bh', 'art', ...Object.keys(sections)];
                 const matches = allCommands.filter(cmd => cmd.startsWith(currentText.toLowerCase()));
 
                 if(matches.length === 1) {
@@ -870,7 +997,7 @@ function bootSequence() {
 ===================================================
 
 Try these commands to explore:
-  ${makeClickable('publications', 'publications')}  ${makeClickable('research', 'research')}  ${makeClickable('teaching', 'teaching')}  ${makeClickable('contact', 'contact')}
+  ${makeClickable('publications', 'publications')}  ${makeClickable('research', 'research')}  ${makeClickable('teaching', 'teaching')}  ${makeClickable('contact', 'contact')}  ${makeClickable('art', 'art')}
 
 Or type ${makeClickable('ls', 'ls')} to list all sections, ${makeClickable('help', 'help')} for more info.
 `;
